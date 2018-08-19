@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>ADMIN - Food Ordering System Gapakelama</title>
+  <!-- Bootstrap core CSS-->
+  <link href="<?= base_url() ?>assets/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom fonts for this template-->
+  <link href="<?= base_url() ?>assets/fonts/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <!-- Custom styles for this template-->
+  <link href="<?= base_url() ?>assets/css/sb-admin.css" rel="stylesheet">
+</head>
+
+<body class="fixed-nav sticky-footer bg-dark" id="page-top">
+  <!-- Load Data-->
+    <?php
+		$jumlahMinuman = $listMinuman->num_rows();?>
+
+<?php include 'template/nav_header.php'; ?>
+
+  <div class="content-wrapper">
+    <div class="container-fluid">
+      <!-- SUB TITLE-->
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">MENU</li>
+        <li class="breadcrumb-item active">Daftar Minuman</li>
+      </ol>
+    <!-- CONTENT AREA -->
+      <div class="row">
+        <div class="col-12">
+          <h1>Daftar Menu Minuman</h1>
+          <div class="py-2">
+            <?php
+                $this->load->library('form_validation');
+                echo validation_errors("<div class='alert alert-danger'>","</div>"); ?>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addMinuman">Tambah Menu Minuman</button>
+          </div>
+          <!-- Example DataTables Card-->
+          <div class="card mb-3">
+            <div class="card-header">
+              <i class="fa fa-table"></i> List Minuman</div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                  <thead>
+                    <tr>
+                      <th>No.</th>
+                      <th>Id Minuman</th>
+                      <th>Nama Minuman</th>
+                      <th>Harga</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tfoot>
+                    <tr>
+                      <th>No.</th>
+                      <th>Id Minuman</th>
+                      <th>Nama Minuman</th>
+                      <th>Harga</th>
+                      <th>Action</th>
+                    </tr>
+                  </tfoot>
+                  <tbody>
+                      <?php
+				if($jumlahMinuman > 0){
+				$i = 1;
+				foreach ($listMinuman->result() as $row){
+				?>
+				<tr>
+                	<td><?= $i++ ?></td>
+                    <td><?= $row->id_minuman ?></td>
+                    <td><?= $row->nama_minuman ?></td>
+                    <td>Rp.<?= $row->harga_minuman ?></td>
+                    <td>
+                      <button type="button" class="btn btn-info edit-data" data-toggle="modal" data-target="#viewimage" textcolor="#ffffff"><i class="fa fa-image"></i></button>
+                    	<button type="button" class="edit-data btn btn-warning edit-data" data-toggle="modal" data-id="<?= $row->id_minuman ?>" data-nama="<?= $row->nama_minuman ?>" data-harga="<?= $row->harga_minuman ?>" data-target="#editMinuman" textcolor="#ffffff"><i class="fa fa-edit"></i></button>
+                      <a href="<?= base_url() ?>index.php/dashboard_admin/hapus_minumanDb/<?= $row->id_minuman ?>"><button class="btn btn-danger" onClick="return doconfirm();"><i class="fa fa-trash-o"></i></button></a>
+                    </td>
+                 </tr>
+                 <?php
+				}
+					?>
+                  </tbody>
+                </table>
+               <?php
+                    }
+                ?>
+              </div>
+            </div>
+      </div>
+    </div>
+        </div>
+      </div>
+    </div>
+    <!-- /.container-fluid-->
+    <!-- /.content-wrapper-->
+    <footer class="sticky-footer">
+      <div class="container">
+        <div class="text-center">
+          <small>Copyright © Gian Almada 2018</small>
+        </div>
+      </div>
+    </footer>
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fa fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal-->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <a class="btn btn-primary" href="<?php echo site_url('welcome/index')?>">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tambah Minuman Modal -->
+      <!-- Modal -->
+    <div class="modal fade" id="addMinuman" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Tambah Menu Minuman</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+            <form method="post" action="<?php echo site_url('dashboard_admin/tambah_MinumanDb')?>">
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="py-2">
+                        <label>ID Minuman</label>
+                        <input type="text" class="form-control" placeholder="Id Minuman" name="id_minuman" required=""/>
+                    </div>
+                    <div class="form-row">
+                      <div class="col-md-6">
+                        <label>Nama Minuman</label>
+                        <input type="text" class="form-control" placeholder="Nama Minuman" name="nama_minuman" required=""/>
+                      </div>
+                      <div class="col-md-6">
+                        <label>Harga Minuman</label>
+                        <input type="text" class="form-control" placeholder="Harga Minuman" name="harga_minuman" required=""/>
+                      </div>
+                    </div>
+                    <div class="form-row">
+                        <label>Image Minuman</label>
+                        <input type="file" class="form-control" name="image_minuman"/>
+                    </div>
+                </div>
+            </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" type="submit">Tambah</button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+        <!-- UBAH Minuman Modal -->
+      <!-- Modal -->
+    <div class="modal fade" id="editMinuman" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Edit Menu Minuman</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+            <form method="post" action="<?php echo site_url('dashboard_admin/edit_MinumanDb')?>">
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="py-2">
+                        <input type="hidden" name="id_minuman" id="idMinuman" class="form-control"  />
+                        <p id="idminumanshow" class="form-control"></p>
+                    </div>
+                    <div class="py-2">
+                        <input type="text" name="nama_minuman" id="namaminuman" class="form-control" />
+                    </div>
+                    <div class="py-2">
+                        <input type="text" name="harga_minuman" id="hargaminuman" class="form-control" />
+                    </div>
+                </div>
+            </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" type="submit">Ubah</button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <?php include 'template/footer.php'; ?>
+
+  </div>
+</body>
+
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         

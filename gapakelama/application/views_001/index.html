@@ -1,0 +1,1640 @@
+e pattern may be "*", a variable name, or a plain string.
+# If the string is 'OPTIONS' then match the pattern against any of the
+# options from @options.
+sub matches_pattern {
+    my ($string, $pattern) = @_;
+    if ($string eq 'OPTIONS') {
+	for my $option (@options) {
+	    next if ($option eq '');
+	    if ($pattern eq $option) {
+		return 1;
+	    }
+	}
+    } else {
+	if ($pattern eq '*') {
+	    return $string ne '';
+	}
+	if ($pattern =~ /^\$([a-zA-Z0-9_]+)$/) {
+	    for my $member (@{$rules_variables{$1}}) {
+		if ($string eq $member) {
+		    return 1;
+		}
+	    }
+	    return 0;
+	}
+	if ($string eq $pattern) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+if (@layouts) {
+    for my $i (0 .. $#layouts) {
+	if (! defined $variants[$i]) {
+	    $variants[$i] = '';
+	}
+    }
+    my $rules_keycodes;
+    my $rules_symbols;
+    open (RULES, xfilename ("rules/$rules"))
+	or die "$0: ". xfilename ("rules/$rules") .": $!\n";
+    my $oldline = '';
+    my @antecedents;
+    my @consequents;
+    my $match_found = 0;
+    while (<RULES>) {
+	next if (/^\s*\/\//);
+	next if (/^\s*$/);
+	chomp;
+	s/^\s*//;
+	s/\s+/ /g;
+	if ($oldline) {
+	    $_ = $oldline . $_;
+	    $oldline = '';
+	}
+	if (s/\\$/ /) {
+	    $oldline = $_;
+	    next;
+	}
+	if (/^! ?\$([a-zA-Z0-9_]+) ?= ?(.+)$/) {
+	    $rules_variables{$1} = [ split ' ', $2 ];
+	    next;
+	}
+	if (/^! ?(.+)= ?(.+)$/) {
+	    @antecedents = split ' ', $1;
+	    @consequents = split ' ', $2;
+	    foreach my $i (0 .. $#antecedents) {
+		if ($antecedents[$i] eq 'model') {
+		    $antecedents[$i] = $model;
+		} elsif ($antecedents[$i] eq 'layout' && @layouts == 1) {
+		    $antecedents[$i] = $layouts[0];
+		} elsif ($antecedents[$i] =~ /layout\[([1-4])\]/) {
+		    if (@layouts > 1) {
+			$antecedents[$i] = $layouts[$1 - 1];
+		    } else {
+			$antecedents[$i] = '';
+		    }
+		} elsif ($antecedents[$i] eq 'variant' && @variants == 1) {
+		    $antecedents[$i] = $variants[0];
+		} elsif ($antecedents[$i] =~ /variant\[([1-4])\]/) {
+		    if (@variants > 1) {
+			$antecedents[$i] = $variants[$1 - 1];
+		    } else {
+			$antecedents[$i] = '';
+		    }
+		} elsif ($antecedents[$i] eq 'option') {
+		    $antecedents[$i] = 'OPTIONS';
+		} elsif ($antecedents[$i] eq 'layout'
+			 || $antecedents[$i] eq 'variant') {
+		    $antecedents[$i] = '';
+		} else {
+                    warning "Unknown name \"$antecedents[$i]\" in the following line in \"rules/$rules\":\n";
+                    warning "$_\n";
+		    $antecedents[$i] = '';
+		}
+		if (! defined $antecedents[$i]) {
+		    $antecedents[$i] = '';
+		}
+	    }
+	    $match_found = 0;
+	    next;
+	}
+	if (/^(.+)= ?(.+)$/) {
+	    next if ($match_found);
+	    my @antecedent_patterns = split ' ', $1;
+	    my $consequent_str = $2;
+	    if (@antecedent_patterns != @antecedents ) {
+		warning "Bad number of antecedents in the following line in \"rules/$rules\":\n";
+                warning "$_\n";
+                next;
+            }
+	    my $matches = 1;
+	    for my $i (0 .. $#antecedents) {
+		if (! matches_pattern ($antecedents[$i], 
+				       $antecedent_patterns[$i])) {
+		    $matches = 0;
+		    last;
+		}
+	    }
+	    if ($matches) {
+		$match_found = $antecedents[0] ne 'OPTIONS';
+		my @consequent_values = split ' ', $2;
+                if (@consequent_values != @consequents) {
+                    warning "Bad number of consequents in the following line in \"rules/$rules\":\n";
+                    warning "$_\n";
+                }
+		for my $i (0 .. $#consequents) {
+                    # The purpose of the semicolons is to make %(v) and %_v
+                    # empty strings if %v is an empty string
+		    $consequent_values[$i] =~ s/%\(/\(;%/g;
+		    $consequent_values[$i] =~ s/%_/_;%/g;
+		    $consequent_values[$i] =~ s/(%[lvm](\[[1-4]\])?)/$1;/g;
+		    $consequent_values[$i] =~ s/%m/$model/g;
+		    $consequent_values[$i] =~ s/%l\[1\]/$layouts[0]/g;
+		    $consequent_values[$i] =~ s/%l\[2\]/$layouts[1]/g;
+		    $consequent_values[$i] =~ s/%l\[3\]/$layouts[2]/g;
+		    $consequent_values[$i] =~ s/%l\[4\]/$layouts[3]/g;
+		    $consequent_values[$i] =~ s/%l/$layouts[0]/g;
+		    $consequent_values[$i] =~ s/%v\[1\]/$variants[0]/g;
+		    $consequent_values[$i] =~ s/%v\[2\]/$variants[1]/g;
+		    $consequent_values[$i] =~ s/%v\[3\]/$variants[2]/g;
+		    $consequent_values[$i] =~ s/%v\[4\]/$variants[3]/g;
+		    $consequent_values[$i] =~ s/%v/$variants[0]/g;
+		    $consequent_values[$i] =~ s/\(;;\)//g;
+		    $consequent_values[$i] =~ s/_;;//g;
+		    $consequent_values[$i] =~ s/;//g;
+		    if ($consequent_values[$i] =~ /^\+/) {
+			if ($consequents[$i] eq 'keycodes') {
+			    $rules_keycodes = $rules_keycodes .
+				$consequent_values[$i];
+			} elsif ($consequents[$i] eq 'symbols') {
+			    $rules_symbols = $rules_symbols .
+				$consequent_values[$i];
+			}
+		    } else {
+			if ($consequents[$i] eq 'keycodes') {
+			    if (! $rules_keycodes) {
+				$rules_keycodes = $consequent_values[$i];
+			    }
+			} elsif ($consequents[$i] eq 'symbols') {
+			    if (! $rules_symbols) {
+				$rules_symbols = $consequent_values[$i];
+			    }
+			}
+		    }
+		}
+	    }
+	    next;
+	}    
+	warning "Syntax error in the following line in \"rules/$rules\":\n";
+        warning "$_\n";
+        die;
+    }
+    close RULES;
+
+    if ($verbosity >= 1) {
+	print STDERR  "Acording to the rules file:\n"
+	    ." keycodes = $rules_keycodes\n"
+	    ." symbols = $rules_symbols\n";
+    }
+
+    if (! $keycodes) {
+	$keycodes = $rules_keycodes;
+    }
+    if (! $symbols) {
+	$symbols = $rules_symbols;
+    }
+}
+
+if (! $keycodes) {
+    die "$0: No keycodes, nor layout specified\n";
+}
+if (! $symbols) {
+    die "$0: No symbols, nor layout specified\n";
+}
+
+########### COMPUTE ARCH ###########################################
+
+if ($keycodes =~ /(^|\+|\|)macintosh\(old\)($|\+|\|)/) {
+    $arch = 'macintosh';
+} elsif ($keycodes =~ /(^|\+|\|)ataritt(\([^\)]*\))?($|\+|\|)/) {
+    $arch = 'ataritt';
+} elsif ($keycodes =~ /(^|\+|\|)amiga(\([^\)]*\))?($|\+|\|)/) {
+    $arch = 'amiga';
+} elsif ($keycodes =~ /(^|\+|\|)sun(\(type[45][^\)]*\))?($|\+|\|)/) {
+    $arch = 'sun';
+} elsif ($keycodes =~ /(^|\+|\|)evdev(\([^\)]*\))?($|\+|\|)/) {
+    $arch = 'evdev';
+}
+
+########### READ ACM ###############################################
+
+if ($charmap) {
+    for my $acmfile ("$installdir/share/consoletrans/${charmap}",
+                     "$installdir/share/consoletrans/${charmap}.gz",
+                     "$installdir/share/consoletrans/${charmap}.acm",
+                     "$installdir/share/consoletrans/${charmap}.acm.gz",
+                     "/usr/share/consoletrans/${charmap}",
+                     "/usr/share/consoletrans/${charmap}.gz",
+                     "/usr/share/consoletrans/${charmap}.acm",
+                     "/usr/share/consoletrans/${charmap}.acm.gz",
+                     "${charmap}") {
+	if (-f $acmfile) {
+	    $acm = $acmfile;
+	    last;
+	}
+    }
+    (-f $acm) or die "$0: no ACM for ${charmap} exists\n";
+    if ($acm =~ /gz$/) {
+	open (ACM, '-|:utf8', "zcat $acm") or die "$0: $acm: $!\n";
+    } else {
+	open (ACM, '<:utf8', $acm) or die "$0: $acm: $!\n";
+    }
+    while (<ACM>) {
+	s/\#.*//;
+	chomp;
+	next unless (/[^\s]/);
+	if (/^\s*0x([0-9a-fA-F]{1,2})\s+\'([^\']+)\'\s*$/) {
+	    my $uni = ord ($2);
+	    my $c = hex ($1);
+	    $acmtable{$uni} = $c;
+	} else {
+	    die "$0: Syntax error in ACM file: $_\n";
+	}
+    }
+    close ACM;
+}
+
+########### PARSING ###############################################
+
+# Report a syntax error in $filename. $_[0] should describe what was
+# expected at $stream.
+sub syntax_error {
+    die "$0: instead of \"". (substr ($stream, 0, 50))
+	."\" in $filename expected $_[0].\n";
+}
+
+# Opens the text file $_[0], reads it and saves its contents in $stream
+# The comments are removed, all new lines are replaced by spaces and
+# all redundant spaces are removed.
+sub file_to_string {
+    my $file = $_[0];
+    my $string = '';
+    open (FILE, "$file") or die "$0: $file: $!\n";
+    while (<FILE>) {
+	chomp;
+	s{//.*}{};
+	s{\#.*}{};
+	$string = $string . $_ .' ';
+    }
+    close FILE;
+    
+    my $normalized = '';
+    my $final_letter = 0;
+    while ($string) {
+	if ($string =~ s/^\s+// && $final_letter && $string =~ /^[a-zA-Z0-9_]/) {
+	    $normalized = $normalized .' ';
+	    $final_letter = 0;
+	}
+	if ($string =~ s/^([^\"\s]+)//) {
+	    $normalized = $normalized . $1;
+	    $final_letter = ($1 =~ /[a-zA-Z0-9_]$/);
+	    next;
+	}
+	if ($string =~ s/^(\"[^\"]*(\"|$))//) {
+	    $normalized = $normalized . $1;
+	    $final_letter = 0;
+	    if ($2 ne '"') {
+		die "$0: missing quote in ". (substr ($1, 0, 50)) ."...\n";
+	    }
+	    next;
+	}
+	(! $string ) or die "Internal error";
+    }
+    $stream = $normalized;
+}
+
+# removes from $stream initial sequence of xkb flags (default, partial,
+# hidden, etc.) Returns true if the "default" flag was among them.
+sub xkb_flags {
+    my $default = 0;
+    while ($stream =~ s/^(default|partial|hidden
+			  |alphanumeric_keys|modifier_keys
+			  |keypad_keys|function_keys
+			  |alternate_group)\s?(.*)/$2/ix) {
+	$default = 1 if ($1 =~ /default/i);
+    }
+    return $default;
+}
+
+# Removes and returns identifier from $stream. 
+sub xkb_identifier {
+    if ($stream =~ s/^([a-zA-Z0-1_]+) ?(.*)/$2/) {
+	return $1;
+    } else {
+	syntax_error "identifier";
+    }
+}
+
+# Removes and returns a string from $stream.
+sub xkb_string {
+    if ($stream =~ /^\"([^\"]*)\"(.*)/) {
+	$stream = $2;
+	return $1;
+    } else {
+	syntax_error "string";
+    }
+}
+
+# Removes an include method name from $stream and returns $alternate_method,
+# $augment_method, $replace_method, or $override_method.  If $stream
+# does not start with a method name, return the default method (i.e. $method)
+sub xkb_method {
+    if ($stream =~ s/^alternate ?(.*)/$1/i) {
+	return $alternate_method;
+    } elsif ($stream =~ s/^augment ?(.*)/$1/i) {
+	return $augment_method;
+    } elsif ($stream =~ s/^replace ?(.*)/$1/i) {
+	return $replace_method;
+    } elsif ($stream =~ s/^override ?(.*)/$1/i) {
+	return $override_method;
+    } else {
+	return $method;
+    }
+}
+
+# If $stream starts with an include statement - process it and return true.
+# Otherwise return false. $_[0] is the file type ("symbols" or "keycodes")
+sub xkb_include {
+    my $file_type = $_[0];
+    if ($stream =~ s/^(include|replace|augment|override)\"([^\"]*)\";?
+                        (.*)/$3/ix) {
+	my $method_name = $1;
+	my $include_request = $2;
+	if ($method != $ignore_method) {
+	    my $oldmethod = $method;
+	    if ($method_name =~ /replace/i) {
+		$method = $replace_method;
+	    } elsif ($method_name =~ /augment/i) {
+		$method = $augment_method;
+	    } elsif ($method_name =~ /override/i) {
+		$method = $override_method;
+	    }
+	    &include_xkb_file ($file_type, $include_request);
+	    $method = $oldmethod;
+	}
+	return 1;
+    } else {
+	return 0;
+    }
+}
+
+sub xkb_keycodes_definitions {
+    my $oldmethod = $method;
+    while ($stream) {
+	$method = $oldmethod;
+
+	if (xkb_include ('keycodes')) {
+	    next;
+	}
+
+	$method = xkb_method ();
+	
+	if ($stream =~ (s/^(minimum|maximum|indicator|virtual\sindicator)
+			[^;]*;(.*)/$2/ix)) {
+	    next;
+	}
+
+	if ($stream =~ /^<([^>]*)>=/) {
+	    $stream =~ s/^<([^>]+)>=([0-9]*);(.*)/$3/
+		or syntax_error "keycode definition";
+	    my $key = $1;
+	    my $code = $2;
+	    if ($method == $replace_method
+		|| $method == $override_method
+		|| ($method == $augment_method
+		    && ! defined $keycodes_table{$key})) {
+		$keycodes_table{$key} = [ $code ];
+		delete $aliases{$key};
+	    } elsif ($method == $alternate_method) {
+		push @{$keycodes_table{$key}}, $code;
+	    }
+	    next;
+	}
+	if ($stream =~ /^alias/) {
+	    $stream =~ s/^alias<([^>]+)>=<([^>]+)>;(.*)/$3/
+		or syntax_error "alias definition";
+	    my $alias = $1;
+	    my $key = $2;
+	    if ($method == $replace_method
+		|| $method == $override_method
+		|| ($method == $augment_method
+		    && ! defined $keycodes_table{$alias})) {
+		$keycodes_table{$alias} = [];
+		$aliases{$alias} = $key;
+	    }
+	    next;
+	}
+	last;
+    }
+    $method = $oldmethod;
+}
+
+# Fill @{$symbols_table{$code}[$group]} with symbols
+sub symbols_for_group {
+    my $code = shift;
+    my $group = shift;
+    if ($method == $replace_method
+	|| ($method == $override_method
+	    && (@_ || ! defined $symbols_table{$code}[$group]))
+	|| ($method == $augment_method &&
+	    ! defined $symbols_table{$code})) {
+	my $level = 0;
+	for my $symbol (@_) {
+	    if ($symbol !~ /\(/ && $symbol =~ /./
+		&& (! defined $xkbsym_table{$symbol}
+		    || $xkbsym_table{$symbol} ne 'NoSymbol'
+		    || ! defined $symbols_table{$code}[$group][$level])) {
+		$symbols_table{$code}[$group][$level] = $symbol;
+	    }
+	    $level++;
+	}
+    }
+}
+
+sub xkb_key {
+    my $default_key_type = $_[0];
+    if ($stream =~ /^key</i) {
+	$stream =~ s/^key<([^>]+)>\{([^\}]*?)\};(.*)/$3/i
+	    or syntax_error "key definition";
+	my $key = $1;
+	my $list = $2 .",";
+	if ($verbosity >= 4 && ! defined $keycodes_table{$key}) {
+	    warning "No scan code for <$key> is defined.\n";
+	}
+	for my $code (@{$keycodes_table{$key}}) {
+	    if ($method == $replace_method) {
+		$symbols_table{$code} = [];
+	    }
+	    my $group = $base_group;
+	    while ($list =~ /[^ ]/) {
+		# [ X1, X2, ... ]
+		if ($list =~ s/^\[([^\]]*?)\],(.*)/$2/) {
+		    (my $symbols = $1) =~ s/,/ /g;
+		    my @groupsymbols = split ' ', $symbols;
+		    symbols_for_group $code, $group, @groupsymbols;
+		    $group++;
+		    next;
+		}
+		# symbols[GroupN] = [ X1, X2, ... ]
+		if ($list =~ (s/^symbols\[Group([1-4])\]
+			      =\[([^\]]*?)\],(.*)/$3/x)) {
+		    my $group = $1 - 1 + $base_group;
+		    (my $symbols = $2) =~ s/,/ /g;
+		    my @groupsymbols = split ' ', $symbols;
+		    symbols_for_group $code, $group, @groupsymbols;
+		    next;
+		}
+		# type = "...."
+		if ($list =~ (s/^type(?:\[Group1\])?
+                              =\"([^\"]+)\",(.*)/$2/x)) {
+		    if ($method == $replace_method
+			|| $method == $override_method
+			|| ($method == $augment_method
+			    && ! defined $types_table{$code})) {
+			$types_table{$code} = $1;
+		    }
+		    next;
+		}
+                # virtualMods = AltGr
+                # overlay1=<KO7>
+		next if ($list =~ s/^[a-zA-Z0-9_]+(=[a-zA-Z0-9_<>]+)?,
+                                   (.*)/$2/x);
+		# type = "CTRL+ALT"
+		next if ($list =~ s/^[a-zA-Z0-9_]+=\"[^\"]+\",(.*)/$1/);
+		# type[...] = "..."
+		next if ($list =~ s/^type\[[a-zA-Z0-9_]+\]=\"[^\"]+\",
+                                    (.*)/$1/x);
+		# actions[...] = [ ... ]
+		next if ($list =~ s/^actions\[[a-zA-Z0-9_]+\]=\[[^\]]*?\],
+                                    (.*)/$1/x);
+		die "$0: garbage in a key definition: \"$list\""
+		    ." in $filename.\n";
+	    }
+	    if (! defined $types_table{$code}
+		|| $types_table{$code} eq 'DEFAULT') {
+		$types_table{$code} = $default_key_type;
+	    }
+	}
+	return 1;
+    } else {
+	return 0;
+    }
+}
+
+sub xkb_symbols_definitions {
+    my $oldmethod = $method;
+    my $default_key_type = 'DEFAULT';
+    while ($stream) {
+	$method = $oldmethod;
+
+	if (xkb_include ('symbols')) {
+	    next;
+	}
+
+	$method = xkb_method ();
+
+	if ($stream =~ /^name/i) {
+	    $stream =~ s/^name\[[a-zA-Z0-9_]+\]=\"[^\"]*\";(.*)/$1/i
+		or syntax_error "group name";
+	    next;
+	}
+
+	if ($stream =~ (s/^key\.type(?:\[Group1\])?=\"([^\"]+)\";(.*)/$2/)) {
+	    $default_key_type = $1;
+	    next;
+	}
+	
+	if ($stream =~ s/^[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+=.*?;(.*)/$1/i) {
+	    next;
+	}
+
+	if ($stream =~ s/^[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+\[[a-zA-Z0-9_]+\]
+                       =.*?;(.*)/$1/ix) {
+	    next;
+	}
+
+	if (xkb_key $default_key_type) {
+	    next;
+	}
+
+	if ($stream =~ /^(modifier_map|modmap|mod_map)/i) {
+	    $stream =~ (s/^(modifier_map|modmap|mod_map)\s?[a-zA-Z0-9_]+
+			\{[^\}]*\};(.*)/$2/ix)
+		or syntax_error "modifier_map";
+	    next;
+	}
+
+	if ($stream =~ /^virtual_modifiers/i) {
+	    $stream =~ (s/^virtual_modifiers\s?[a-zA-Z0-9_,]+;(.*)/$1/ix)
+		or syntax_error "virtual_modifiers";
+	    next;
+	}
+	last;
+    }
+    $method = $oldmethod;
+}
+
+sub xkb_definitions {
+    my $file_type = $_[0];
+    if ($file_type eq 'symbols') {
+	xkb_symbols_definitions();
+    } elsif ($file_type eq 'keycodes') {
+	xkb_keycodes_definitions();
+    } else {
+	die "$0: Bad xkb file type $file_type\n";
+    }
+}
+
+# Remove from $stream the characters up to the first unmatched "}"
+sub skip_to_brace {
+    while ($stream && ($stream =~ s/^[^\}\{]*\{//)) {
+	&skip_to_brace;
+    }
+    $stream =~ s/^[^\}\{]*(\}|$)//;
+}
+
+sub xkb_block_list {
+    my $file_type = $_[0];
+    my $block = $_[1];
+    my $first = 1;
+    my $ok = 0;
+    my $mystream = $stream;
+    while ($stream) {
+	my $default = xkb_flags();
+	xkb_identifier() eq "xkb_". $file_type
+	    or syntax_error "xkb_". $file_type;
+	my $name = xkb_string();
+	my $structured;
+	if ($stream =~ s/^\{//) {
+	    $structured = 1;
+	} else {
+	    $structured = 0;
+	}
+	if ($name eq $block || ($first && ! $block)) {
+	    xkb_definitions ($file_type);
+	    if ($structured) {
+		$stream =~ s/^\};.*// or syntax_error "};";
+	    } else {
+		$stream = '';
+	    }
+	    $ok = 1;
+	} else {
+	    if ($structured) {
+		skip_to_brace;
+		$stream =~ s/^;// or syntax_error ";";
+	    } else {
+		last;
+	    }
+	}
+	$first = 0;
+    }
+    if (! $ok) {
+	$stream = $mystream;
+    }
+    return $ok;
+}
+
+sub include_xkb_file {
+    my $file_type = $_[0];
+    my $include_list = '^'. $_[1];
+
+    my $oldmethod = $method;
+    my $oldbase_group = $base_group;
+    while ($include_list) {
+	my $file;
+	my $block;
+	if ($include_list =~ (s/^(\^|\+|\|)([^\(\|\+]+)\(([^\)]+)\)
+			      :([1234])(.*)/$5/x)) {
+	    if ($1 eq '+') {
+		$method = $override_method;
+	    } elsif ($1 eq '|') {
+		$method = $augment_method;
+	    }
+	    $file = $2;
+	    $block = $3;
+	    $base_group = $4 - 1 + $base_group;
+	} elsif ($include_list =~ (s/^(\^|\+|\|)([^\(\|\+]+)\(([^\)]+)\)
+				   (.*)/$4/x)) {
+	    if ($1 eq '+') {
+		$method = $override_method;
+	    } elsif ($1 eq '|') {
+		$method = $augment_method;
+	    }
+	    $file = $2;
+	    $block = $3;
+	} elsif ($include_list =~ s/^(\^|\+|\|)([^\(\|\+]+):([1234])(.*)/$4/) {
+	    if ($1 eq '+') {
+		$method = $override_method;
+	    } elsif ($1 eq '|') {
+		$method = $augment_method;
+	    }
+	    $file = $2;
+	    $block = '';
+	    $base_group = $3 - 1 + $base_group;
+	} elsif ($include_list =~ s/^(\^|\+|\|)([^\(\|\+]+)(.*)/$3/) {
+	    if ($1 eq '+') {
+		$method = $override_method;
+	    } elsif ($1 eq '|') {
+		$method = $augment_method;
+	    }
+	    $file = $2;
+	    $block = '';
+	} else {
+	    die "$0: bad include list $include_list.\n";
+	}
+	
+	my $oldstream = $stream;
+	if ($file =~ /^\.?\//) {
+	    $stream = file_to_string ("$file");
+	} else {
+	    $stream = file_to_string (xfilename "$file_type/$file");
+	}
+	my $oldfilename = $filename;
+	$filename = $file;
+	if (!xkb_block_list ($file_type, $block)) {
+	    warning "Can not find \"$block\" in \"$file\".\n";
+	    xkb_block_list ($file_type, '');
+	}
+	$stream = $oldstream;
+	$filename = $oldfilename;
+	$method = $oldmethod;
+	$base_group = $oldbase_group;
+    }
+}
+
+include_xkb_file 'keycodes', $keycodes;
+
+foreach my $alias (keys %aliases) {
+    if (! defined $keycodes_table{$aliases{$alias}}) {
+	die "$0: undefined keyname $aliases{$alias} in ".
+	    "an keycode alias definition in $filename.\n";
+    }
+    $keycodes_table{$alias} = [ @{$keycodes_table{$alias}},
+				@{$keycodes_table{$aliases{$alias}}} ];
+}
+
+include_xkb_file 'symbols', $symbols;
+
+if ($arch eq 'at' || $arch eq 'evdev') {
+# Pause - 110, Break - 114, PrintScreen - 111, SysRq - 92
+    for my $group (0 .. 3) {
+        # no separate Break key on AT keyboards.  Break = Ctrl+Pause
+        if (defined $symbols_table{110}[$group][1]) {
+            $symbols_table{114}[$group] = [$symbols_table{110}[$group][1]];
+        }
+        # no separate SysRq key on AT keyboards.  SysRq = Alt+PrintScreen
+        if (defined $symbols_table{111}[$group][1]) {
+            $symbols_table{92}[$group] = [$symbols_table{111}[$group][1]];
+        }
+    }
+}
+
+foreach my $key (keys %symbols_table) {
+    foreach my $group (0 .. $#{$symbols_table{$key}}) {
+	if (! defined $symbols_table{$key}[$group]) {
+	    $symbols_table{$key}[$group] = [];
+	} else {
+	    foreach my $level (0 .. $#{$symbols_table{$key}[$group]}) {
+		if (! defined $symbols_table{$key}[$group][$level]) {
+		    $symbols_table{$key}[$group][$level] = 'NoSymbol';
+		}
+	    }
+	}
+    }
+    if (! defined $types_table{$key}) {
+	$types_table{$key} = 'DEFAULT';
+    }
+}
+
+sub uni_to_legacy {
+    my $uni = $_[0];
+    if ($acm) {
+	if ($uni <= 0x7f) {
+            if ($freebsd && $uni >= 0x20 && $uni <= 0x7e) {
+                return sprintf "\'%c\'", $uni;
+            } else {
+                return sprintf "0x%02x", $uni;
+            }
+	} elsif (defined $acmtable{$uni}) {
+            if ($freebsd) {
+                return sprintf "%i", $acmtable{$uni};
+            } else {
+                return sprintf "0x%02x", $acmtable{$uni};
+            }
+	} else {
+	    if ($verbosity >= 8) {
+		warning sprintf ("Unicode U+%04x does not exist "
+				 ."in the legacy encoding\n", $uni);
+	    }
+	    return $voidsymbol;
+	}
+    } else {
+	return 'U+'. sprintf ("%04x", $uni);
+    }
+}
+
+sub x_to_kernelsym {
+    my $xkeysym = $_[0];
+    my $kernelkeysym = $xkbsym_table{$xkeysym};
+    if (defined $kernelkeysym) {
+        if ($kernelkeysym !~ /^[0-9][0-9a-fA-F]{3}$/) {
+	    return $kernelkeysym;
+	}
+    } else {
+	$kernelkeysym = ($xkeysym =~ /^0x0*(100)?([0-9a-fA-F]{4})$/
+			 ? $2
+			 : ($xkeysym =~ /^U([0-9a-fA-F]+)$/
+			    ? $1 
+			    : undef));
+    }
+    if (defined $kernelkeysym) {
+	my $uni = hex ($kernelkeysym);
+	if (defined $forbidden{$uni}) {
+            if ($verbosity >= 8) {
+                warning "Forbidden Unicode \"U+$kernelkeysym\"\n";
+            }
+	    return $voidsymbol;
+	} else {
+	    if (pack("U", $uni) =~ /\p{IsAlpha}/) {
+		my $legacy = uni_to_legacy ($uni);
+		if ($legacy ne $voidsymbol) {
+		    return '+'. $legacy; # further processed for FreeBSD
+		} else {
+		    return $legacy;
+		}
+	    } elsif ($uni <= 0x1f) {
+		return $controlsyms[$uni];
+	    } else {
+		return uni_to_legacy ($uni);
+	    }
+	}
+    } else {
+	warning "Unknown X keysym \"$xkeysym\"\n";
+	return $voidsymbol;
+    }
+}
+
+sub x_to_ascii {
+    my $xkeysym = $_[0];
+    my $kernelkeysym = $xkbsym_table{$xkeysym};
+    if (defined $kernelkeysym) {
+        if (defined $controlsyms_hash{$kernelkeysym}) {
+            return $controlsyms_hash{$kernelkeysym};
+	} elsif ($kernelkeysym !~ /^[0-9][0-9a-fA-F]{3}$/) {
+	    return undef;
+	}
+    } else {
+	$kernelkeysym = ($xkeysym =~ /^0x0*(100)?([0-9a-fA-F]{4})$/
+			 ? $2
+			 : ($xkeysym =~ /^U([0-9a-fA-F]+)$/
+			    ? $1 
+			    : undef));
+    }
+    if (defined $kernelkeysym) {
+	my $uni = hex ($kernelkeysym);
+	if (0x00 <= $uni && 0x7f >= $uni) {
+	    return $uni;
+	}
+    }
+    return undef;
+}
+
+# A vector of symbol codes for a key
+my @vector;
+# $numlockable[group] -> whether the group is numlockable
+my @numlockable;
+# A vector with same length as @vector.  Measures how well each element of
+# @vector represents the xkb symbol for the particular key.  Bigger values
+# mean lower quality.
+my @quality;
+
+sub approximate {
+    my ($coord, $new_sym, $new_quality) = @_;
+    # $new_sym represents the xkb symbol for position $coord in @vector
+    # with quality $new_quality
+    if ((! defined $quality[$coord] || $quality[$coord] > $new_quality)
+	&& $new_sym ne $voidsymbol) {
+	$vector[$coord] = $new_sym;
+	$quality[$coord] = $new_quality;
+    }
+}
+
+# Fill @vector with data for key number $_[0]
+sub flatten {
+    #    Kernel         X
+    # -----------------------------------------
+    # 1  Shift          level 2 (Shift)
+    # 2  AltGr          levels 3 and 4 (AltGr)
+    # 4  Control        Control
+    # 8  Alt            Alt
+    # 0                 Group1
+    # 16 ShiftL         Group2
+    # 32 ShiftR         Group4
+    # 48 ShiftL+ShiftR  Group3
+    my $key = $_[0];
+    @vector = ();
+    @quality = ();
+    @numlockable = (0,0,0,0);
+    my @real_group_table = ([-1, -1, -1, -1],
+			    [0, 0, 0, 0], # gr1 -> gr1 -> gr1 -> gr1
+			    [0, 1, 1, 0], # gr1 -> gr2 -> gr1 -> gr2
+			    [0, 1, 2, 0], # gr1 -> gr2 -> gr1 -> gr3
+			    [0, 1, 3, 2]);# gr1 -> gr2 -> gr3 -> gr4
+    for my $group (0..3) {
+	my $real_group = $real_group_table[1+$#{$symbols_table{$key}}][$group];
+        my $last_level;
+        while ($real_group >= 0
+               && ($last_level = $#{$symbols_table{$key}[$real_group]}) < 0) {
+            $real_group = $real_group - 1;
+        }
+	next if ($real_group < 0);
+	for my $level (0..3) {
+	    my $real_level = $level;
+	    if ($types_table{$key} eq 'ONE_LEVEL') {
+		$real_level = 0;
+	    } elsif ($types_table{$key} eq 'TWO_LEVEL') {
+                $real_level = $real_level % 2;
+	    } elsif ($types_table{$key} eq 'THREE_LEVEL') {
+		if ($real_level > 2) {
+		    $real_level = 2;
+		}
+	    }
+            if ($last_level == -1) {
+                next;
+            } elsif ($last_level == 0) {
+                $real_level = 0;
+            } elsif ($last_level == 1) {
+                $real_level = $real_level % 2;
+            } elsif ($last_level == 2 && $real_level == 3) {
+                $real_level = 2;
+            } elsif ($real_level > $last_level) {
+                $real_level = $last_level;
+            }
+	    my $coord;
+	    for ($types_table{$key}) {
+		if (/^(DEFAULT|ONE_LEVEL|TWO_LEVEL
+                      |THREE_LEVEL|ALPHABETIC
+                      |EIGHT_LEVEL|EIGHT_LEVEL_ALPHABETIC
+                      |EIGHT_LEVEL_SEMIALPHABETIC
+                      |FOUR_LEVEL|FOUR_LEVEL_ALPHABETIC
+                      |FOUR_LEVEL_SEMIALPHABETIC
+                      |SEPARATE_CAPS_AND_SHIFT_ALPHABETIC
+		      |KEYPAD|FOUR_LEVEL_X|FOUR_LEVEL_MIXED_KEYPAD
+		      |FOUR_LEVEL_KEYPAD|LOCAL_EIGHT_LEVEL
+                      |FOUR_LEVEL_PLUS_LOCK
+                      )$/x) {
+		    # Level0: plain
+		    # Level1: shift
+		    # Level2: altgr
+		    # Level3: shift+altgr
+		    $coord = ($group << 4) + $level;
+		} elsif (/^(PC_BREAK|PC_CONTROL_LEVEL2
+                           |PC_LCONTROL_LEVEL2|PC_RCONTROL_LEVEL2)$/x) {
+		    # Level0: plain
+		    # Level1: control
+		    if ($level == 0 || $level == 2) {
+			$coord = ($group << 4) + $level;
+		    } else {
+			$coord = ($group << 4) + $level + 3;
+		    }
+		} elsif (/^(PC_SYSRQ|PC_ALT_LEVEL2
+                           |PC_LALT_LEVEL2|PC_RALT_LEVEL2)$/x) {
+		    # Level0: plain
+		    # Level1: alt
+		    if ($level == 0 || $level == 2) {
+			$coord = ($group << 4) + $level;
+		    } else {
+			# notice that $level is 1 or 3
+			$coord = ($group << 4) + $level + 7;
+		    }
+		} elsif (/^SHIFT\+ALT$/) {
+		    # Level0: plain
+		    # Level1: shift+alt
+		    if ($level == 0 || $level == 2) {
+			$coord = ($group << 4) + $level;
+		    } else {
+			$coord = ($group << 4) + $level + 8;
+		    }
+		} elsif (/^CTRL\+ALT$/) {
+		    # Level0: plain
+		    # Level1: control+alt
+		    if ($level == 0 || $level == 2) {
+			$coord = ($group << 4) + $level;
+		    } else {
+			$coord = ($group << 4) + $level + 11;
+		    }
+		} else {
+		    warning "Unknown key type $types_table{$key}\n";
+		    $coord = ($group << 4) + $level;
+		}
+	    }
+	    my $xkeysym = $symbols_table{$key}[$real_group][$real_level];
+	    if ($xkeysym =~ /^KP_/) {
+                $numlockable[$group] = 1;
+	    }
+	    my $is_special = ($xkeysym !~ /^U[0-9a-fA-F]+$/
+			      && defined $xkbsym_table{$xkeysym}
+			      && ($xkbsym_table{$xkeysym}
+				  !~ /^[0-9][0-9a-fA-F]{3}$/));
+	    my $kernelkeysym = x_to_kernelsym ($xkeysym);
+	    approximate ($coord, $kernelkeysym, 0);
+            if (defined (my $ascii = x_to_ascii ($xkeysym))) {
+                approximate (($coord | 0x08), $metasyms[$ascii], 1);
+                approximate (($coord | 0x04), $controlsyms[$ascii], 1);
+                approximate (($coord | 0x0c), $metacontrolsyms[$ascii], 1);
+            } elsif ($is_special) { # this includes being 'NoSymbol'
+                approximate (($coord | 0x08), $kernelkeysym, 2);
+                approximate (($coord | 0x04), $kernelkeysym, 2);
+                approximate (($coord | 0x0c), $kernelkeysym, 2);
+            }
+	}
+    }
+    for my $x (0..1) {
+        my $mask = 1 << $x;
+        for my $coord (0..63) {
+            next if (! defined $vector[$coord]);
+            approximate($coord ^ $mask, $vector[$coord],
+                        $quality[$coord] + $mask << 2);
+        }
+    }
+    for my $coord (0..16) {
+        next if (! defined $vector[$coord]);
+        for my $x (1..3) {
+            my $mask = $x << 4;
+            approximate($coord | $mask, $vector[$coord],
+                        $quality[$coord] + 1 << 6);
+        }
+    }
+    for my $coord (0 .. 63) {
+	if (! defined $vector[$coord]) {
+	    $vector[$coord] = $voidsymbol;
+	}
+    }
+
+    for my $coord (0 .. 63) {
+	next if ($coord & 0x0c); # next if Control and/or Alt
+	my $mask = $kernel_modifiers{$vector[$coord]};
+	next unless (defined $mask);
+	for my $mod (4, 8, 12) {
+	    if ($vector[$coord + $mod] eq $voidsymbol
+		&& ($vector[($coord + $mod) ^ $mask] eq $voidsymbol)) {
+		$vector[$coord + $mod] = $vector[$coord];
+	    }
+	}
+    }
+    
+    # Without this it would be possible to lock permanently
+    # a modifier key such as Control or Alt
+    for my $coord (0 .. 63) {
+	my $mask = $kernel_modifiers{$vector[$coord]};
+	if (defined $mask) {
+	    $vector[$coord ^ $mask] = $vector[$coord];
+	    if ($compact && ! $freebsd) {
+                # In non-Latin layouts AltGr=ShiftL
+		# AltGr = 0x02,  ShiftL = 0x10
+		if (($mask & 0x02) && ($mask & 0x10)) {
+		    $vector[$coord ^ $mask ^ 0x02] = $vector[$coord];
+		    $vector[$coord ^ $mask ^ 0x10] = $vector[$coord];
+		} elsif ($mask & 0x02) {
+		    $vector[$coord ^ $mask ^ 0x10] = $vector[$coord];
+		    $vector[$coord ^ $mask ^ 0x10 ^ 0x02] = $vector[$coord];
+		} elsif ($mask & 0x10) {
+		    $vector[$coord ^ $mask ^ 0x02] = $vector[$coord];
+		    $vector[$coord ^ $mask ^ 0x02 ^ 0x10] = $vector[$coord];
+		}
+	    }
+	}
+    }
+    
+    if ($freebsd || ! $compact) {
+	for my $coord (16 .. 63) {
+	    if ($vector[$coord] =~ /^(ShiftL|ShiftL_Lock|ashift|alock)$/) {
+		$vector[$coord] = $voidsymbol;
+	    }
+	}
+	for my $coord (0 .. 15) {
+	    if ($vector[$coord] eq 'ShiftL_Lock') {   #  0 => 16
+		$vector[$coord + 16] = 'ShiftR_Lock'; # 16 => 48
+		$vector[$coord + 32] = 'ShiftR_Lock'; # 32 => 0
+		$vector[$coord + 48] = 'ShiftL_Lock'; # 48 => 32
+	    } elsif ($vector[$coord] =~ /^(ShiftL|ashift|alock)$/) {
+		$vector[$coord + 16] = $vector[$coord];
+		$vector[$coord + 32] = $vector[$coord];
+		$vector[$coord + 48] = $vector[$coord];
+	    }
+	}
+    } else {
+	for my $coord (16 .. 63) {
+	    if ($vector[$coord] =~ /^(AltGr|AltGr_Lock)$/) {
+		$vector[$coord] = $voidsymbol;
+	    }
+	}
+	for my $coord (0 .. 15) {
+            if ($vector[$coord] =~ /^(AltGr_Lock|AltGr)$/) {
+		$vector[$coord + 16] = $vector[$coord];
+		$vector[$coord + 32] = $vector[$coord];
+		$vector[$coord + 48] = $vector[$coord];
+	    }
+	}
+    }
+
+    for my $group (0 .. 3) {
+	my $kp = undef;
+	for my $x (0 .. 15) {
+	    my $coord = 16 * $group + $x;
+	    if ($vector[$coord] =~ /^KP_/) {
+		$kp = $vector[$coord];
+		last;
+	    }
+	}
+	if ($types_table{$key} =~ /^(KEYPAD|FOUR_LEVEL_X
+                                    |FOUR_LEVEL_MIXED_KEYPAD
+		                    |FOUR_LEVEL_KEYPAD)$/x
+	    && ! defined $kp) {
+	    $kp = 'VoidSymbol';
+            $numlockable[$group] = 1;
+	}
+	if ($kp && ! $freebsd) {
+	    for my $x (0 .. 15) {
+		my $coord = 16 * $group + $x;
+		for ($vector[$coord]) {
+		    if (/^VoidSymbol$/) {
+			# KP_Begin and KP_Delete are mapped to VoidSymbol
+			$vector[$coord] = $kp;
+		    } elsif (/$xkbsym_table{'plus'}/) {# not anchored match!
+			$vector[$coord] = 'KP_Add';
+		    } elsif (/$xkbsym_table{'minus'}/) {
+			$vector[$coord] = 'KP_Subtract';
+		    } elsif (/$xkbsym_table{'asterisk'}/) {
+			$vector[$coord] = 'KP_Multiply';
+		    } elsif (/$xkbsym_table{'slash'}/) {
+			$vector[$coord] = 'KP_Divide';
+		    } elsif (/$xkbsym_table{'comma'}/) {
+			$vector[$coord] = 'KP_Comma';
+		    } elsif (/$xkbsym_table{'period'}/) {
+			$vector[$coord] = 'KP_Period';
+		    } elsif (/$xkbsym_table{'0'}/) {
+			$vector[$coord] = 'KP_0';
+		    } elsif (/$xkbsym_table{'1'}/) {
+			$vector[$coord] = 'KP_1';
+		    } elsif (/$xkbsym_table{'2'}/) {
+			$vector[$coord] = 'KP_2';
+		    } elsif (/$xkbsym_table{'3'}/) {
+			$vector[$coord] = 'KP_3';
+		    } elsif (/$xkbsym_table{'4'}/) {
+			$vector[$coord] = 'KP_4';
+		    } elsif (/$xkbsym_table{'5'}/) {
+			$vector[$coord] = 'KP_5';
+		    } elsif (/$xkbsym_table{'6'}/) {
+			$vector[$coord] = 'KP_6';
+		    } elsif (/$xkbsym_table{'7'}/) {
+			$vector[$coord] = 'KP_7';
+		    } elsif (/$xkbsym_table{'8'}/) {
+			$vector[$coord] = 'KP_8';
+		    } elsif (/$xkbsym_table{'9'}/) {
+			$vector[$coord] = 'KP_9';
+		    } elsif (/^(Return|Enter)$/) {
+			$vector[$coord] = 'KP_Enter';
+		    } elsif (/^Home$/) {
+			$vector[$coord] = 'KP_7';
+		    } elsif (/^Left$/) {
+			$vector[$coord] = 'KP_4';
+		    } elsif (/^Up$/) {
+			$vector[$coord] = 'KP_8';
+		    } elsif (/^Right$/) {
+			$vector[$coord] = 'KP_6';
+		    } elsif (/^Down$/) {
+			$vector[$coord] = 'KP_2';
+		    } elsif (/^Prior$/) {
+			$vector[$coord] = 'KP_9';
+		    } elsif (/^Next$/) {
+			$vector[$coord] = 'KP_3';
+		    } elsif (/^End$/) {
+			$vector[$coord] = 'KP_1';
+		    } elsif (/^Insert$/) {
+			$vector[$coord] = 'KP_0';
+		    }
+		}
+	    }
+	}
+    }
+
+    for my $group (0 .. 3) {
+	my $coord = $group << 4;
+	my $mainsym = $vector[$coord];
+	if ($mainsym =~ /^fkey([0-9]+)$/) {
+	    my $num = $1;
+            if (1 <= $num && $num <= 12) {
+                $vector[$coord + 1] = 'fkey'. ($num+12); # shift
+                $vector[$coord + 4] = 'fkey'. ($num+24); # control
+                $vector[$coord + 5] = 'fkey'. ($num+36); # control + shift
+                $vector[$coord + 2] = 'scr'. sprintf("%02i", $num); #altgr
+                my $x = sprintf("%02i", ($num <= 6) ? $num+10 : $num);
+                $vector[$coord + 3] = 'scr'. $x; # altgr + shift
+                $vector[$coord + 6] = 'scr'. sprintf("%02i", $num); # altgr+ctrl
+                $vector[$coord + 7] = 'scr'. $x; # altgr + control + shift
+            } elsif ($num == 52 || $num == 56) {
+                my $sym = $num == 52 ? '\'-\'' : '\'+\'';
+                for my $i ($coord .. $coord+15) {
+                    if ($vector[$i] eq $mainsym && $vector[$i^1] eq $mainsym) {
+                        $vector[$i | 1] = $sym;
+                    }
+                }
+            } elsif ($num == 60 && $vector[$coord + 1] eq 'fkey60') {
+                $vector[$coord + 1] = 'paste';
+            }
+        } elsif ($mainsym =~ /^esc$/) {
+            $vector[$coord + 6] = 'debug';
+            $vector[$coord + 7] = 'debug';
+        } elsif ($mainsym =~ /^saver$/) { # 'Pause' key
+            $vector[$coord] = 'slock';
+            $vector[$coord + 1] = 'saver'; # shift
+            $vector[$coord + 2] = 'susp';  # altgr
+            $vector[$coord + 3] = 'susp';  # altgr + shift
+            $vector[$coord + 4] = 'slock'; # ctrl
+            $vector[$coord + 5] = 'saver'; # ctrl + shift
+            $vector[$coord + 6] = 'susp';  # ctrl + altgr
+            $vector[$coord + 7] = 'susp';  # ctrl + altgr + shift
+        } elsif ($freebsd && $mainsym =~ /^\' \'$/) {
+            $vector[$coord + 6] = 'susp';
+            $vector[$coord + 7] = 'susp';
+        } elsif ($mainsym =~ /^ht$/) {
+            for my $i ($coord .. $coord+15) {
+                if ($vector[$i] eq 'ht' && $vector[$i ^ 1] eq 'ht') {
+                    $vector[$i | 1] = 'btab';
+                }
+            }
+        } elsif ($mainsym =~ /^nscr$/) {
+            for my $i ($coord .. $coord+15) {
+                if ($vector[$i] eq 'nscr' && $vector[$i ^ 1] eq 'nscr') {
+                    $vector[$i | 1] = 'pscr';
+                }
+            }
+            $vector[$coord + 4] = 'debug';
+            $vector[$coord + 5] = 'debug';
+	} elsif ($mainsym =~ /^F([0-9]+)$/) {
+	    my $num = $1;
+	    $vector[$coord + 1] = 'F'. ($num + 12); # shift
+	    $vector[$coord + 2] = 'Console_'. ($num + 12); # altgr
+	    $vector[$coord + 3] = 'Console_'. ($num + 24); # altgr + shift
+	    $vector[$coord + 4] = 'F'. ($num + 24); # control
+	    $vector[$coord + 5] = 'F'. ($num + 36); # control + shift
+	    $vector[$coord + 6] = 'Console_'. ($num + 12); # control + altgr
+	    $vector[$coord + 7] = 'Console_'. ($num + 24); # control+altgr+shift
+	    $vector[$coord + 8] = 'Console_'. $num; # alt
+	    $vector[$coord + 9] = 'Console_'. ($num + 12); # alt + shift
+	    $vector[$coord + 12] = 'Console_'. $num; # control + alt
+	    $vector[$coord + 13] = 'Console_'. ($num + 12); # control+alt+shift
+	} elsif ($mainsym eq 'Scroll_Lock' || $mainsym eq 'Help') {
+	    $vector[$coord + 1] = 'Show_Memory';
+	    $vector[$coord + 2] = 'Show_Registers';
+	    $vector[$coord + 4] = 'Show_State';
+	    $vector[$coord + 8] = 'Show_Registers';
+	} elsif ($mainsym =~ /^KP_([0-9])$/) {
+	    my $num = $1;
+	    $vector[$coord + 2] = 'Hex_'. $num;
+	    $vector[$coord + 9] = 'Hex_'. $num;
+	    $vector[$coord + 8] = 'Ascii_'. $num;
+	} elsif ($mainsym eq 'Num_Lock') {
+	    $vector[$coord + 2] = 'Hex_A';
+	    $vector[$coord + 9] = 'Hex_A';
+	} elsif ($mainsym eq 'KP_Divide') {
+	    $vector[$coord + 2] = 'Hex_B';
+	    $vector[$coord + 9] = 'Hex_B';
+	} elsif ($mainsym eq 'KP_Multiply') {
+	    $vector[$coord + 2] = 'Hex_C';
+	    $vector[$coord + 9] = 'Hex_C';
+	} elsif ($mainsym eq 'KP_Subtract') {
+	    $vector[$coord + 2] = 'Hex_D';
+	    $vector[$coord + 9] = 'Hex_D';
+	} elsif ($mainsym eq 'KP_Add') {
+	    $vector[$coord + 2] = 'Hex_E';
+	    $vector[$coord + 9] = 'Hex_E';
+	} elsif ($mainsym eq 'KP_Enter') {
+	    $vector[$coord + 2] = 'Hex_F';
+	    $vector[$coord + 9] = 'Hex_F';
+	} elsif ($mainsym eq 'Prior' || $mainsym eq 'PageUp') {
+	    $vector[$coord + 1] = 'Scroll_Backward';
+	} elsif ($mainsym eq 'Next' || $mainsym eq 'PageDown') {
+	    $vector[$coord + 1] = 'Scroll_Forward';
+	} elsif ($mainsym eq 'Left') {
+	    $vector[$coord + 8] = 'Decr_Console';
+	} elsif ($mainsym eq 'Right') {
+	    $vector[$coord + 8] = 'Incr_Console';
+	} elsif ($mainsym eq 'Up') {
+	    $vector[$coord + 8] = 'KeyboardSignal';
+	}
+    }
+    return @vector;
+}
+
+sub print_vector {
+    my $kernel_code = $_[0];
+    my $only_VoidSymbol = 1;
+    my $no_NoSymbol = 1;
+    for my $mask (0 .. 63) {
+	if ($vector[$mask] ne $voidsymbol && $vector[$mask] ne 'NoSymbol') {
+	    $only_VoidSymbol = 0;
+	    last;
+	}
+    }
+    return if ($only_VoidSymbol && $compact);
+    for my $mask (0 .. 63) {
+	if ($vector[$mask] eq 'NoSymbol') {
+	    $no_NoSymbol = 0;
+	    last;
+	}
+    }
+    if ($freebsd) {
+        my @capslockable = (0,0,0,0);
+	for my $group (0 .. 3) {
+	    if ($vector[$group * 16] =~ /^\+/) {
+                $capslockable[$group] = 1;
+                last;
+            }
+        }
+	for my $mask (0 .. 63) {
+	    $vector[$mask] =~ s/^\+//;
+	    $vector[$mask] =~ s/^NoSymbol$/nop/;
+        }
+        for my $group (0 .. 1) {
+            next if ($group && $symbols !~ /:2/);
+            my $lockstate = ($capslockable[$group] ? 
+                             ($numlockable[$group] ? 'B' : 'C')
+                             : ($numlockable[$group] ? 'N' : 'O'));
+            $KEYMAP .= sprintf "  %03i   ", $kernel_code + 128*$group;
+            for my $mask (0, 1, 4, 5, 2, 3, 6, 7) {
+                $KEYMAP .= sprintf "%-6s ", $vector[$mask + 16*$group];
+            }
+            $KEYMAP .= " $lockstate\n";
+        }
+    } elsif ($compact) {
+	my $line = ($symbols =~ /:2/ # true if the keymap is non-latin
+		    ? "@vector[0, 1, 16, 17, 4, 20, 8, 24, 12, 28]"
+		    : "@vector[0, 1, 2, 3, 4, 6, 8, 10, 12, 14]");
+	$line =~ s/NoSymbol/VoidSymbol/g;
+	$KEYMAP .= "keycode $kernel_code = $line\n";
+    } else {
+	my @capsvector = @vector;
+	for my $mask (0 .. 63) {
+	    if ($capsvector[$mask] =~ /^(\+?)U\+([0-9a-fA-F]+)$/) {
+		my $v = hex ($2);
+		my $l = ord (lc (pack ("U", $v)));
+		my $u = ord (uc (pack ("U", $v)));
+		my $c = ($v == $l ? $u : $l);
+		$capsvector[$mask] = $1 ."U+". sprintf ("%04x", $c);
+		if ($v != $c && $v gt 0x7f) {
+		    $broken_caps = 1;
+		}
+	    }
+	}
+	if ($no_NoSymbol) {
+	    $KEYMAP .= "keycode $kernel_code = @vector @capsvector\n";
+	} else {
+	    for my $mask (0 .. 63) {
+		if ($vector[$mask] ne 'NoSymbol') {
+		    $KEYMAP .= "$modifier_combinations[$mask]"
+			." keycode $kernel_code = $vector[$mask]\n";
+		    if ($modifier_combinations[$mask] =~ /plain/) {
+			$KEYMAP .= "ctrll"
+			    ." keycode $kernel_code = $capsvector[$mask]\n";
+		    } else {
+			$KEYMAP .= "ctrll $modifier_combinations[$mask]"
+			    ." keycode $kernel_code = $capsvector[$mask]\n";
+		    }
+		}
+	    }
+	}
+    }
+}
+
+my %at_scancodes = (
+    9 => 1,
+    10 => 2,
+    11 => 3,
+    12 => 4,
+    13 => 5,
+    14 => 6,
+    15 => 7,
+    16 => 8,
+    17 => 9,
+    18 => 10,
+    19 => 11,
+    20 => 12,
+    21 => 13,
+    22 => 14,
+    23 => 15,
+    24 => 16,
+    25 => 17,
+    26 => 18,
+    27 => 19,
+    28 => 20,
+    29 => 21,
+    30 => 22,
+    31 => 23,
+    32 => 24,
+    33 => 25,
+    34 => 26,
+    35 => 27,
+    36 => 28,
+    37 => 29,
+    38 => 30,
+    39 => 31,
+    40 => 32,
+    41 => 33,
+    42 => 34,
+    43 => 35,
+    44 => 36,
+    45 => 37,
+    46 => 38,
+    47 => 39,
+    48 => 40,
+    49 => 41,
+    50 => 42,
+    51 => 43,
+    52 => 44,
+    53 => 45,
+    54 => 46,
+    55 => 47,
+    56 => 48,
+    57 => 49,
+    58 => 50,
+    59 => 51,
+    60 => 52,
+    61 => 53,
+    62 => 54,
+    63 => 55,
+    64 => 56,
+    65 => 57,
+    66 => 58,
+    67 => 59,
+    68 => 60,
+    69 => 61,
+    70 => 62,
+    71 => 63,
+    72 => 64,
+    73 => 65,
+    74 => 66,
+    75 => 67,
+    76 => 68,
+    77 => 69,
+    78 => 70,
+    79 => 71,
+    80 => 72,
+    81 => 73,
+    82 => 74,
+    83 => 75,
+    84 => 76,
+    85 => 77,
+    86 => 78,
+    87 => 79,
+    88 => 80,
+    89 => 81,
+    90 => 82,
+    91 => 83,
+    92 => 84,
+    93 => -1, # fake key (KP_Equal)
+    94 => 86,
+    95 => 87,
+    96 => 88,
+    97 => 102,
+    98 => 103,
+    99 => 104,
+    100 => 105,
+    102 => 106,
+    103 => 107,
+    104 => 108,
+    105 => 109,
+    106 => 110,
+    107 => 111,
+    108 => 96,
+    109 => 97,
+    110 => 119,
+    111 => 99,
+    112 => 98,
+    113 => 100,
+    114 => 101,
+    115 => 125,
+    116 => 126,
+    117 => 127,
+    118 => -1,  # Japanese
+    119 => -1,  # Japanese
+    120 => -1,  # Japanese
+    123 => -1,
+    124 => -1,  # fake key
+    125 => -1,  # fake key
+    126 => -1,  # fake key
+    127 => -1,  # fake key
+    128 => -1,  # fake key
+    129 => -1,  # Japanese
+    131 => -1,  # Japanese
+    133 => 124, # Japanese
+    134 => 121, # Brasilian ABNT2
+    144 => -1,  # Japanese
+    156 => -1,  # fake key
+    208 => -1,  # Japanese
+    209 => -1,  # Korean
+    210 => -1,  # Korean
+    211 => 89,  # Brasilian ABNT2, Japanese
+    214 => -1,  # alternate between internal and multimedia display
+    215 => -1,  # turn light on/of
+    216 => -1,  # brightness down
+    217 => -1,  # brightness up
+);
+
+my %freebsd_scancodes = (
+    9 => 1,
+    10 => 2,
+    11 => 3,
+    12 => 4,
+    13 => 5,
+    14 => 6,
+    15 => 7,
+    16 => 8,
+    17 => 9,
+    18 => 10,
+    19 => 11,
+    20 => 12,
+    21 => 13,
+    22 => 14,
+    23 => 15,
+    24 => 16,
+    25 => 17,
+    26 => 18,
+    27 => 19,
+    28 => 20,
+    29 => 21,
+    30 => 22,
+    31 => 23,
+    32 => 24,
+    33 => 25,
+    34 => 26,
+    35 => 27,
+    36 => 28,
+    37 => 29,
+    38 => 30,
+    39 => 31,
+    40 => 32,
+    41 => 33,
+    42 => 34,
+    43 => 35,
+    44 => 36,
+    45 => 37,
+    46 => 38,
+    47 => 39,
+    48 => 40,
+    49 => 41,
+    50 => 42,
+    51 => 43,
+    52 => 44,
+    53 => 45,
+    54 => 46,
+    55 => 47,
+    56 => 48,
+    57 => 49,
+    58 => 50,
+    59 => 51,
+    60 => 52,
+    61 => 53,
+    62 => 54,
+    63 => 55,
+    64 => 56,
+    65 => 57,
+    66 => 58,
+    67 => 59,
+    68 => 60,
+    69 => 61,
+    70 => 62,
+    71 => 63,
+    72 => 64,
+    73 => 65,
+    74 => 66,
+    75 => 67,
+    76 => 68,
+    77 => 69,
+    78 => 70,
+    79 => 71,
+    80 => 72,
+    81 => 73,
+    82 => 74,
+    83 => 75,
+    84 => 76,
+    85 => 77,
+    86 => 78,
+    87 => 79,
+    88 => 80,
+    89 => 81,
+    90 => 82,
+    91 => 83,
+    92 => 84,
+    93 => -1, # fake key (KP_Equal)
+    94 => 86,
+    95 => 87,
+    96 => 88,
+    97 => 94,
+    98 => 95,
+    99 => 96,
+    100 => 97,
+    102 => 98,
+    103 => 99,
+    104 => 100,
+    105 => 101,
+    106 => 102,
+    107 => 103,
+    108 => 89,
+    109 => 90,
+    110 => 104,
+    111 => 92,
+    112 => 91,
+    113 => 93,
+    114 => 108,
+    115 => 105,
+    116 => 106,
+    117 => 107,
+    118 => -1,  # Japanese
+    119 => -1,  # Japanese
+    120 => -1,  # Japanese
+    123 => -1,
+    124 => -1,  # fake key
+    125 => -1,  # fake key
+    126 => -1,  # fake key
+    127 => -1,  # fake key
+    128 => -1,  # fake key
+    129 => -1,  # Japanese
+    131 => -1,  # Japanese
+    133 => 125, # Japanese
+    134 => 126, # Brasilian ABNT2
+    144 => -1,  # Japanese
+    156 => -1,  # fake key
+    208 => -1,  # Japanese
+    209 => -1,  # Korean
+    210 => -1,  # Korean
+    211 => 115,  # Brasilian ABNT2, Japanese
+    214 => -1,  # alternate between internal and multimedia display
+    215 => -1,  # turn light on/of
+    216 => -1,  # brightness down
+    217 => -1,  # brightness up
+);
+
+if ($freebsd) {
+    $KEYMAP .= 
+"#                                                         alt\n".
+"# scan                       cntrl          alt    alt   cntrl lock\n".
+"# code  base   shift  cntrl  shift  alt    shift  cntrl  shift state\n".
+"# ------------------------------------------------------------------\n";
+#"  000   nop    nop    nop    nop    nop    nop    nop    nop     O\n";
+} elsif ($compact) {
+    $KEYMAP .= "keymaps 0-4,6,8,10,12,14\n";
+} else {
+    $KEYMAP .= "keymaps 0-127\n";
+}
+
+if ($freebsd) {
+    foreach my $key (sort {$a <=> $b} (keys %symbols_table)) {
+	my $kernel_code = $freebsd_scancodes{$key};
+	next if (! defined $kernel_code || $kernel_code < 0);
+	@vector = flatten ($key);
+	if ($kernel_code == 83 || $kernel_code == 103) {
+	    for my $coord (0+6, 0+7, 16+6, 16+7, 32+6, 32+7, 48+6, 48+7,) {
+		$vector[$coord] = 'boot';
+	    }
+        }
+	print_vector $kernel_code;
+    }
+} elsif ($arch eq 'at' || $arch eq 'evdev') {
+    foreach my $key (sort {$a <=> $b} (keys %symbols_table)) {
+	my $kernel_code = (($arch eq 'at') ? $at_scancodes{$key} : $key - 8);
+	next if (! defined $kernel_code || $kernel_code < 0);
+        @vector = 
