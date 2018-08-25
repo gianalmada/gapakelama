@@ -1,35 +1,58 @@
- 종속성도 부분적으로 지원을 제공합니다. 하지만 스레드 자체에서 처리해야 하는 항목을 기다리면서 스레드가 교체 상태에 빠지지 않습니다.</summary>
-    </member>
-    <member name="F:System.Collections.Concurrent.EnumerablePartitionerOptions.None">
-      <summary>최적의 성능을 얻기 위해 버퍼링을 사용하는 기본 동작을 사용합니다.</summary>
-    </member>
-    <member name="T:System.Collections.Concurrent.IProducerConsumerCollection`1">
-      <summary>공급자/소비자 용도의 스레드로부터 안전한 컬렉션을 조작할 메서드를 정의합니다.이 인터페이스는 <see cref="T:System.Collections.Concurrent.BlockingCollection`1" /> 같은 더 높은 수준의 추상이 기본 저장소 메커니즘으로 컬렉션을 사용할 수 있도록 생산자/소비자 컬렉션에 대한 통합 표현을 제공합니다.</summary>
-      <typeparam name="T">컬렉션에 있는 요소의 형식을 지정합니다.</typeparam>
-    </member>
-    <member name="M:System.Collections.Concurrent.IProducerConsumerCollection`1.CopyTo(`0[],System.Int32)">
-      <summary>지정된 인덱스부터 시작하여 <see cref="T:System.Collections.Concurrent.IProducerConsumerCollection`1" />의 요소를 <see cref="T:System.Array" />에 복사합니다.</summary>
-      <param name="array">
-        <see cref="T:System.Collections.Concurrent.IProducerConsumerCollection`1" />에서 복사한 요소의 대상인 일차원 <see cref="T:System.Array" />입니다. 배열에서 0부터 시작하는 인덱스를 사용해야 합니다.</param>
-      <param name="index">
-        <paramref name="array" />에서 복사가 시작되는 인덱스(0부터 시작)입니다.</param>
-      <exception cref="T:System.ArgumentNullException">
-        <paramref name="array" />는 null 참조(Visual Basic에서는 Nothing)입니다.</exception>
-      <exception cref="T:System.ArgumentOutOfRangeException">
-        <paramref name="index" />가 0보다 작은 경우</exception>
-      <exception cref="T:System.ArgumentException">
-        <paramref name="index" />가 <paramref name="array" />의 길이와 같거나 큰 경우 -또는- 컬렉션의 요소 수가 대상 <paramref name="array" />의 <paramref name="index" />부터 끝까지의 사용 가능한 공간보다 큰 경우. </exception>
-    </member>
-    <member name="M:System.Collections.Concurrent.IProducerConsumerCollection`1.ToArray">
-      <summary>
-        <see cref="T:System.Collections.Concurrent.IProducerConsumerCollection`1" />에 포함된 요소를 새 배열에 복사합니다.</summary>
-      <returns>
-        <see cref="T:System.Collections.Concurrent.IProducerConsumerCollection`1" />에서 복사된 요소를 포함하는 새 배열입니다.</returns>
-    </member>
-    <member name="M:System.Collections.Concurrent.IProducerConsumerCollection`1.TryAdd(`0)">
-      <summary>
-        <see cref="T:System.Collections.Concurrent.IProducerConsumerCollection`1" />에 개체를 추가하려고 시도합니다.</summary>
-      <returns>개체가 성공적으로 추가되었으면 true이고, 그렇지 않으면 false입니다.</returns>
-      <param name="item">
-        <see cref="T:System.Collections.Concurrent.IProducerConsumerCollection`1" />에 추가할 개체입니다.</param>
-      <exception cref="T:Syste
+<?php
+/**
+ * CodeIgniter
+ *
+ * An open source application development framework for PHP
+ *
+ * This content is released under the MIT License (MIT)
+ *
+ * Copyright (c) 2014 - 2018, British Columbia Institute of Technology
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package	CodeIgniter
+ * @author	EllisLab Dev Team
+ * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
+ * @copyright	Copyright (c) 2014 - 2018, British Columbia Institute of Technology (http://bcit.ca/)
+ * @license	http://opensource.org/licenses/MIT	MIT License
+ * @link	https://codeigniter.com
+ * @since	Version 1.0.0
+ * @filesource
+ */
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+$lang['email_must_be_array'] = 'The email validation method must be passed an array.';
+$lang['email_invalid_address'] = 'Invalid email address: %s';
+$lang['email_attachment_missing'] = 'Unable to locate the following email attachment: %s';
+$lang['email_attachment_unreadable'] = 'Unable to open this attachment: %s';
+$lang['email_no_from'] = 'Cannot send mail with no "From" header.';
+$lang['email_no_recipients'] = 'You must include recipients: To, Cc, or Bcc';
+$lang['email_send_failure_phpmail'] = 'Unable to send email using PHP mail(). Your server might not be configured to send mail using this method.';
+$lang['email_send_failure_sendmail'] = 'Unable to send email using PHP Sendmail. Your server might not be configured to send mail using this method.';
+$lang['email_send_failure_smtp'] = 'Unable to send email using PHP SMTP. Your server might not be configured to send mail using this method.';
+$lang['email_sent'] = 'Your message has been successfully sent using the following protocol: %s';
+$lang['email_no_socket'] = 'Unable to open a socket to Sendmail. Please check settings.';
+$lang['email_no_hostname'] = 'You did not specify a SMTP hostname.';
+$lang['email_smtp_error'] = 'The following SMTP error was encountered: %s';
+$lang['email_no_smtp_unpw'] = 'Error: You must assign a SMTP username and password.';
+$lang['email_failed_smtp_login'] = 'Failed to send AUTH LOGIN command. Error: %s';
+$lang['email_smtp_auth_un'] = 'Failed to authenticate username. Error: %s';
+$lang['email_smtp_auth_pw'] = 'Failed to authenticate password. Error: %s';
+$lang['email_smtp_data_failure'] = 'Unable to send data: %s';
+$lang['email_exit_status'] = 'Exit status code: %s';

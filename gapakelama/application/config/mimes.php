@@ -77,14 +77,6 @@ return array(
 	'jpeg'	=>	array('image/jpeg', 'image/pjpeg'),
 	'jpg'	=>	array('image/jpeg', 'image/pjpeg'),
 	'jpe'	=>	array('image/jpeg', 'image/pjpeg'),
-	'jp2'	=>	array('image/jp2', 'video/mj2', 'image/jpx', 'image/jpm'),
-	'j2k'	=>	array('image/jp2', 'video/mj2', 'image/jpx', 'image/jpm'),
-	'jpf'	=>	array('image/jp2', 'video/mj2', 'image/jpx', 'image/jpm'),
-	'jpg2'	=>	array('image/jp2', 'video/mj2', 'image/jpx', 'image/jpm'),
-	'jpx'	=>	array('image/jp2', 'video/mj2', 'image/jpx', 'image/jpm'),
-	'jpm'	=>	array('image/jp2', 'video/mj2', 'image/jpx', 'image/jpm'),
-	'mj2'	=>	array('image/jp2', 'video/mj2', 'image/jpx', 'image/jpm'),
-	'mjp2'	=>	array('image/jp2', 'video/mj2', 'image/jpx', 'image/jpm'),
 	'png'	=>	array('image/png',  'image/x-png'),
 	'tiff'	=>	'image/tiff',
 	'tif'	=>	'image/tiff',
@@ -137,8 +129,7 @@ return array(
 	'3gp'   =>	array('video/3gp', 'video/3gpp'),
 	'mp4'   =>	'video/mp4',
 	'm4a'   =>	'audio/x-m4a',
-	'f4v'   =>	array('video/mp4', 'video/x-f4v'),
-	'flv'	=>	'video/x-flv',
+	'f4v'   =>	'video/mp4',
 	'webm'	=>	'video/webm',
 	'aac'   =>	'audio/x-acc',
 	'm4u'   =>	'application/vnd.mpegurl',
@@ -149,26 +140,19 @@ return array(
 	'au'    =>	'audio/x-au',
 	'ac3'   =>	'audio/ac3',
 	'flac'  =>	'audio/x-flac',
-	'ogg'   =>	array('audio/ogg', 'video/ogg', 'application/ogg'),
+	'ogg'   =>	'audio/ogg',
 	'kmz'	=>	array('application/vnd.google-earth.kmz', 'application/zip', 'application/x-zip'),
-	MAMh=  ”—¦ª¹—¹
-¹§ª©Ê·ª©¹·ª	©§©¹˜—™º™Èš¼™—ˆ©˜§™š¨‡™™™§¹ ©§«»¹§Ê¬¹·ËÀª§ººšÇ¼Ê¹¸Êœ¹·ÌÊ©Ç«ªÉ·¬Ê¹¸ººÉ¸ÉËÉ·Ê¹¹Çªªª§
-
-º§ºª
-—¹
-º¨ºËË¸É
-ÊÈ	¹¸É«             Àˆ Ë    ÌˆÆ    —	   †¼È   Àˆš™°  °ˆš‰ À À€—¹‡ÀÌˆÉˆ À  —ˆ À  ˜È©  ° º   ° »{   °                ¢¿ö$;õ‹9šDL'ô&É“L”M"b¦˜Ó¿b¾»Gµ¼˜1"9¨Õ¼/'2ƒ—gDÑéó3‘(<­Èu•—S¾0[W<ò'Ìx…¼äzò£'?jÜñõÔƒýõýtÑHÍûêUM¤_~¨tßöŒKwÐÝ—¬úÇ	¨uÖÏ|lœvÍ1‚Ã¬±£þqîc–U9‰_iùV¯—È6Þ_œrê®,ªykßÝ*!ñ^Óê³úšŒ«I÷TéFê›JkØVnâ¶åwÓÉØ(N¹ªò6%LœV1)±Çi§gZMñO¡¦)`Eý[ræç+q’ZBê™N…‚~­À¿‚>¨’š£cù%S`¤‹NpmÝsò•(¡•™^œªEý·¯ AÍG•íØs³èµ`«§ÁX±-œÒ,ì–Ç> ’d­ÀœRøãKtna…“K¬åÎç”¦¾rD_ÃŠøÑ…§0°
-õ˜œ{Œ3H4Xsm1NS`¯×VoäÀVƒ9"½ []4Èži``V¤9X¶ÝO_IƒÑžZ`)]ÌD¦ ÿë8“ê¦×`0YVi†ólàì –²Ééÿ…îfàà¶&
-`ÕViNV†­SLr'-°”=æö÷ç ØvE<eÚApýÛt`ÀBå³9¥Y„Ž;	¾µgåA¬rr
-;µgËô´41“è·Ø¢£6¤ä €ì>À~  ‚ "((
-FR@uÊvõÀÀ@ÈÐÀ jnÀ rv@€	z>ðð@( A€¥íúüµˆ @&ÔÜ€@èðÀA>~À   ‚‚!" Œ‚¥ ô¥âHº3±ö°ÁÀÐàŒÔUOŸyŽü€
-@A CE@Á(
-H.P¼³ØWfnÀ rv@€R{$?ñ@†@€
-ŠQ ”‚e•9è‚ )SâTY tx` 
-ˆ7@Ö”€VôŠ òÊ˜1  3<°ø(øB@£) º@‰Sn€àD¯ÚÝÄ €Ì2 lpà tx` Ÿ?à`Š@;õwÌ#9óY¤<Àˆm<hÏ<} ¸@}2qÊ¥þ1¶Ã	N°©‚›†{#l€{T›‘‡èá ø€AÁ p]{„[ûÁGÄÆz 
-tã&¢cQÕTDêt£"ÔóGEQ»Dõ~Tˆº÷¨"êà£Š¨ˆ*¢2>¨ˆþQ¨ÞŠDjTE”÷FÛ°}b¢Ê>*ˆš¼¨àÚ`/âAêÁêƒÊÖáÉÜž]£¼ ’´2a nŸ æÊ‚ÊBŽ­À$13 @ÔLE‰hÃÜà@èðÀA>€à
-AC \LÈ@ÀÐj àz~À   ‚‚!" ˆ‚`¤(ªZ€& Ô@€Üè@Àô†à€
-ŠE07QŒjÃõÞ‘&\$‹ï¤àhÀô õå…({Ð¥;Uƒ˜Žà {oa.» 2ç®êÍ™9Va@ŠA4 €sƒÌŸ³´L=ð=Ð:à~à>À? l¼ð$<O`Ú0´à)äÊLÒ«W¤TgÑq`“ `£Ÿ*‘ì$Ú€f¤›2QP‰°NÀRƒÔâ®¨C"ƒ*0vÐ  jnÀ rz@ð	@  ‚‚!" ‚ k_`ð
-BR0u[u ° 
-~WKSG¬p`uAëà¿ •X|~áàø 0ÂPä<øx0ùÀòÀôõAÃÜÚ8_r@Åàø¸,|.ò,R7²7Áê°¹¡A¸¹°²«¢•éÂ1eÁÆp38€90úW}à
-€P ‚…-#P„QŒÞ€&Im@ØàÀ@èðÀ4ü|p ¡B0DRP”­]¾Áš6Ð
+	'kml'	=>	array('application/vnd.google-earth.kml+xml', 'application/xml', 'text/xml'),
+	'ics'	=>	'text/calendar',
+	'ical'	=>	'text/calendar',
+	'zsh'	=>	'text/x-scriptzsh',
+	'7zip'	=>	array('application/x-compressed', 'application/x-zip-compressed', 'application/zip', 'multipart/x-zip'),
+	'cdr'	=>	array('application/cdr', 'application/coreldraw', 'application/x-cdr', 'application/x-coreldraw', 'image/cdr', 'image/x-cdr', 'zz-application/zz-winassoc-cdr'),
+	'wma'	=>	array('audio/x-ms-wma', 'video/x-ms-asf'),
+	'jar'	=>	array('application/java-archive', 'application/x-java-application', 'application/x-jar', 'application/x-compressed'),
+	'svg'	=>	array('image/svg+xml', 'application/xml', 'text/xml'),
+	'vcf'	=>	'text/x-vcard',
+	'srt'	=>	array('text/srt', 'text/plain'),
+	'vtt'	=>	array('text/vtt', 'text/plain'),
+	'ico'	=>	array('image/x-icon', 'image/x-ico', 'image/vnd.microsoft.icon')
+);

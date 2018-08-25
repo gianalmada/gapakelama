@@ -1,732 +1,1326 @@
-*various.txt*   For Vim version 8.1.  Last change: 2018 Mar 29
-
-
-		  VIM REFERENCE MANUAL    by Bram Moolenaar
-
-
-Various commands					*various*
-
-1. Various commands		|various-cmds|
-2. Using Vim like less or more	|less|
-
-==============================================================================
-1. Various commands					*various-cmds*
-
-							*CTRL-L*
-CTRL-L			Clear and redraw the screen.  The redraw may happen
-			later, after processing typeahead.
-
-							*:redr* *:redraw*
-:redr[aw][!]		Redraw the screen right now.  When ! is included it is
-			cleared first.
-			Useful to update the screen halfway executing a script
-			or function.  Also when halfway a mapping and
-			'lazyredraw' is set.
-
-						*:redraws* *:redrawstatus*
-:redraws[tatus][!]	Redraw the status line of the current window.  When !
-			is included all status lines are redrawn.
-			Useful to update the status line(s) when 'statusline'
-			includes an item that doesn't cause automatic
-			updating.
-
-							*N<Del>*
-<Del>			When entering a number: Remove the last digit.
-			Note: if you like to use <BS> for this, add this
-			mapping to your .vimrc: >
-				:map CTRL-V <BS>   CTRL-V <Del>
-<			See |:fixdel| if your <Del> key does not do what you
-			want.
-
-:as[cii]	or					*ga* *:as* *:ascii*
-ga			Print the ascii value of the character under the
-			cursor in decimal, hexadecimal and octal.
-			Mnemonic: Get Ascii value.
-
-			For example, when the cursor is on a 'R':
-				<R>  82,  Hex 52,  Octal 122 ~
-			When the character is a non-standard ASCII character,
-			but printable according to the 'isprint' option, the
-			non-printable version is also given.
-			
-			When the character is larger than 127, the <M-x> form
-			is also printed.  For example:
-				<~A>  <M-^A>  129,  Hex 81,  Octal 201 ~
-				<p>  <|~>  <M-~>  254,  Hex fe,  Octal 376 ~
-			(where <p> is a special character)
-
-			The <Nul> character in a file is stored internally as
-			<NL>, but it will be shown as:
-				<^@>  0,  Hex 00,  Octal 000 ~
-
-			If the character has composing characters these are
-			also shown.  The value of 'maxcombine' doesn't matter.
-
-			If the character can be inserted as a digraph, also
-			output the two characters that can be used to create
-			the character:
-			    <ö> 246, Hex 00f6, Oct 366, Digr o: ~
-			This shows you can type CTRL-K o : to insert ö.
-
-			{not in Vi}
-
-							*g8*
-g8			Print the hex values of the bytes used in the
-			character under the cursor, assuming it is in |UTF-8|
-			encoding.  This also shows composing characters.  The
-			value of 'maxcombine' doesn't matter.
-			Example of a character with two composing characters:
-				e0 b8 81 + e0 b8 b9 + e0 b9 89 ~
-			{not in Vi} {only when compiled with the |+multi_byte|
-			feature}
-
-							*8g8*
-8g8			Find an illegal UTF-8 byte sequence at or after the
-			cursor.  This works in two situations:
-			1. when 'encoding' is any 8-bit encoding
-			2. when 'encoding' is "utf-8" and 'fileencoding' is
-			   any 8-bit encoding
-			Thus it can be used when editing a file that was
-			supposed to be UTF-8 but was read as if it is an 8-bit
-			encoding because it contains illegal bytes.
-			Does not wrap around the end of the file.
-			Note that when the cursor is on an illegal byte or the
-			cursor is halfway a multi-byte character the command
-			won't move the cursor.
-			{not in Vi} {only when compiled with the |+multi_byte|
-			feature}
-
-						*:p* *:pr* *:print* *E749*
-:[range]p[rint] [flags]
-			Print [range] lines (default current line).
-			Note: If you are looking for a way to print your text
-			on paper see |:hardcopy|.  In the GUI you can use the
-			File.Print menu entry.
-			See |ex-flags| for [flags].
-			The |:filter| command can be used to only show lines
-			matching a pattern.
-
-:[range]p[rint] {count} [flags]
-			Print {count} lines, starting with [range] (default
-			current line |cmdline-ranges|).
-			See |ex-flags| for [flags].
-
-							*:P* *:Print*
-:[range]P[rint] [count] [flags]
-			Just as ":print".  Was apparently added to Vi for
-			people that keep the shift key pressed too long...
-			Note: A user command can overrule this command.
-			See |ex-flags| for [flags].
-
-							*:l* *:list*
-:[range]l[ist] [count] [flags]
-			Same as :print, but display unprintable characters
-			with '^' and put $ after the line.  This can be
-			further changed with the 'listchars' option.
-			See |ex-flags| for [flags].
-
-							*:nu* *:number*
-:[range]nu[mber] [count] [flags]
-			Same as :print, but precede each line with its line
-			number.  (See also 'highlight' and 'numberwidth'
-			option).
-			See |ex-flags| for [flags].
-
-							*:#*
-:[range]# [count] [flags]
-			synonym for :number.
-
-							*:#!*
-:#!{anything}		Ignored, so that you can start a Vim script with: >
-				#!vim -S
-				echo "this is a Vim script"
-				quit
-<
-							*:z* *E144*
-:{range}z[+-^.=]{count}	Display several lines of text surrounding the line
-			specified with {range}, or around the current line
-			if there is no {range}.  If there is a {count}, that's
-			how many lines you'll see; if there is only one window
-			then twice the value of the 'scroll' option is used,
-			otherwise the current window height minus 3 is used.
-
-			If there is a {count} the 'window' option is set to
-			its value.
-
-			:z can be used either alone or followed by any of
-			several punctuation marks.  These have the following
-			effect:
-
-			mark   first line    last line      new cursor line ~
-			----   ----------    ---------      ------------
-			+      current line  1 scr forward  1 scr forward
-			-      1 scr back    current line   current line
-			^      2 scr back    1 scr back     1 scr back
-			.      1/2 scr back  1/2 scr fwd    1/2 scr fwd
-			=      1/2 scr back  1/2 scr fwd    current line
-
-			Specifying no mark at all is the same as "+".
-			If the mark is "=", a line of dashes is printed
-			around the current line.
-
-:{range}z#[+-^.=]{count}				*:z#*
-			Like ":z", but number the lines.
-			{not in all versions of Vi, not with these arguments}
-
-							*:=*
-:= [flags]		Print the last line number.
-			See |ex-flags| for [flags].
-
-:{range}= [flags]	Prints the last line number in {range}.  For example,
-			this prints the current line number: >
-				:.=
-<			See |ex-flags| for [flags].
-
-:norm[al][!] {commands}					*:norm* *:normal*
-			Execute Normal mode commands {commands}.  This makes
-			it possible to execute Normal mode commands typed on
-			the command-line.  {commands} are executed like they
-			are typed.  For undo all commands are undone together.
-			Execution stops when an error is encountered.
-
-			If the [!] is given, mappings will not be used.
-			Without it, when this command is called from a
-			non-remappable mapping (|:noremap|), the argument can
-			be mapped anyway.
-
-			{commands} should be a complete command.  If
-			{commands} does not finish a command, the last one
-			will be aborted as if <Esc> or <C-C> was typed.
-			This implies that an insert command must be completed
-			(to start Insert mode, see |:startinsert|).  A ":"
-			command must be completed as well.  And you can't use
-			"Q" or "gQ" to start Ex mode.
-
-			The display is not updated while ":normal" is busy.
-
-			{commands} cannot start with a space.  Put a count of
-			1 (one) before it, "1 " is one space.
-
-			The 'insertmode' option is ignored for {commands}.
-
-			This command cannot be followed by another command,
-			since any '|' is considered part of the command.
-
-			This command can be used recursively, but the depth is
-			limited by 'maxmapdepth'.
-
-			An alternative is to use |:execute|, which uses an
-			expression as argument.  This allows the use of
-			printable characters to represent special characters.
-
-			Example: >
-				:exe "normal \<c-w>\<c-w>"
-<			{not in Vi, of course}
-
-:{range}norm[al][!] {commands}				*:normal-range*
-			Execute Normal mode commands {commands} for each line
-			in the {range}.  Before executing the {commands}, the
-			cursor is positioned in the first column of the range,
-			for each line.  Otherwise it's the same as the
-			":normal" command without a range.
-			{not in Vi}
-
-							*:sh* *:shell* *E371*
-:sh[ell]		This command starts a shell.  When the shell exits
-			(after the "exit" command) you return to Vim.  The
-			name for the shell command comes from 'shell' option.
-							*E360*
-			Note: This doesn't work when Vim on the Amiga was
-			started in QuickFix mode from a compiler, because the
-			compiler will have set stdin to a non-interactive
-			mode.
-
-							*:!cmd* *:!* *E34*
-:!{cmd}			Execute {cmd} with the shell.  See also the 'shell'
-			and 'shelltype' option.
-
-			Any '!' in {cmd} is replaced with the previous
-			external command (see also 'cpoptions').  But not when
-			there is a backslash before the '!', then that
-			backslash is removed.  Example: ":!ls" followed by
-			":!echo ! \! \\!" executes "echo ls ! \!".
-
-			A '|' in {cmd} is passed to the shell, you cannot use
-			it to append a Vim command.  See |:bar|.
-
-			If {cmd} contains "%" it is expanded to the current
-			file name.  Special characters are not escaped, use
-			quotes to avoid their special meaning: >
-				:!ls "%"
-<			If the file name contains a "$" single quotes might
-			work better (but a single quote causes trouble): >
-				:!ls '%'
-<			This should always work, but it's more typing: >
-				:exe "!ls " . shellescape(expand("%"))
-<
-			A newline character ends {cmd}, what follows is
-			interpreted as a following ":" command.  However, if
-			there is a backslash before the newline it is removed
-			and {cmd} continues.  It doesn't matter how many
-			backslashes are before the newline, only one is
-			removed.
-
-			On Unix the command normally runs in a non-interactive
-			shell.  If you want an interactive shell to be used
-			(to use aliases) set 'shellcmdflag' to "-ic".
-			For Win32 also see |:!start|.
-
-			After the command has been executed, the timestamp and
-			size of the current file is checked |timestamp|.
-
-			Vim redraws the screen after the command is finished,
-			because it may have printed any text.  This requires a
-			hit-enter prompt, so that you can read any messages.
-			To avoid this use: >
-				:silent !{cmd}
-<			The screen is not redrawn then, thus you have to use
-			CTRL-L or ":redraw!" if the command did display
-			something.
-			Also see |shell-window|.
-
-							*:!!*
-:!!			Repeat last ":!{cmd}".
-
-							*:ve* *:version*
-:ve[rsion]		Print the version number of the editor.  If the
-			compiler used understands "__DATE__" the compilation
-			date is mentioned.  Otherwise a fixed release-date is
-			shown.
-			The following lines contain information about which
-			features were enabled when Vim was compiled.  When
-			there is a preceding '+', the feature is included,
-			when there is a '-' it is excluded.  To change this,
-			you have to edit feature.h and recompile Vim.
-			To check for this in an expression, see |has()|.
-			Here is an overview of the features.
-			The first column shows the smallest version in which
-			they are included:
-			   T	tiny (always)
-			   S	small
-			   N	normal
-			   B	big
-			   H	huge
-			   m	manually enabled or depends on other features
-			 (none) system dependent
-			Thus if a feature is marked with "N", it is included
-			in the normal, big and huge versions of Vim.
-
-							*+feature-list*
-   *+acl*		|ACL| support included
-   *+ARP*		Amiga only: ARP support included
-B  *+arabic*		|Arabic| language support
-T  *+autocmd*		|:autocmd|, automatic commands
-H  *+autoservername*	Automatically enable |clientserver|
-m  *+balloon_eval*	|balloon-eval| support in the GUI. Included when
-			compiling with supported GUI (Motif, GTK, GUI) and
-			either Netbeans/Sun Workshop integration or |+eval|
-			feature.
-H  *+balloon_eval_term*	|balloon-eval| support in the terminal,
-			'balloonevalterm'
-N  *+browse*		|:browse| command
-N  *+builtin_terms*	some terminals builtin |builtin-terms|
-B  *++builtin_terms*	maximal terminals builtin |builtin-terms|
-N  *+byte_offset*	support for 'o' flag in 'statusline' option, "go"
-			and ":goto" commands.
-m  *+channel*		inter process communication |channel|
-N  *+cindent*		|'cindent'|, C indenting
-N  *+clientserver*	Unix and Win32: Remote invocation |clientserver|
-   *+clipboard*		|clipboard| support
-N  *+cmdline_compl*	command line completion |cmdline-completion|
-S  *+cmdline_hist*	command line history |cmdline-history|
-N  *+cmdline_info*	|'showcmd'| and |'ruler'|
-N  *+comments*		|'comments'| support
-B  *+conceal*		"conceal" support, see |conceal| |:syn-conceal| etc.
-N  *+cryptv*		encryption support |encryption|
-B  *+cscope*		|cscope| support
-T  *+cursorbind*	|'cursorbind'| support
-m  *+cursorshape*	|termcap-cursor-shape| support
-m  *+debug*		Compiled for debugging.
-N  *+dialog_gui*	Support for |:confirm| with GUI dialog.
-N  *+dialog_con*	Support for |:confirm| with console dialog.
-N  *+dialog_con_gui*	Support for |:confirm| with GUI and console dialog.
-N  *+diff*		|vimdiff| and 'diff'
-N  *+digraphs*		|digraphs| *E196*
-   *+directx*		Win32 GUI only: DirectX and |'renderoptions'|
-   *+dnd*		Support for DnD into the "~ register |quote_~|.
-B  *+emacs_tags*	|emacs-tags| files
-N  *+eval*		expression evaluation |eval.txt|
-N  *+ex_extra*		always on now, used to be for Vim's extra Ex commands
-N  *+extra_search*	|'hlsearch'| and |'incsearch'| options.
-B  *+farsi*		|farsi| language
-N  *+file_in_path*	|gf|, |CTRL-W_f| and |<cfile>|
-N  *+find_in_path*	include file searches: |[I|, |:isearch|,
-			|CTRL-W_CTRL-I|, |:checkpath|, etc.
-N  *+folding*		|folding|
-   *+footer*		|gui-footer|
-   *+fork*		Unix only: |fork| shell commands
-   *+float*		Floating point support
-N  *+gettext*		message translations |multi-lang|
-   *+GUI_Athena*	Unix only: Athena |GUI|
-   *+GUI_neXtaw*	Unix only: neXtaw |GUI|
-   *+GUI_GTK*		Unix only: GTK+ |GUI|
-   *+GUI_Motif*		Unix only: Motif |GUI|
-   *+GUI_Photon*	QNX only:  Photon |GUI|
-m  *+hangul_input*	Hangul input support |hangul|
-   *+iconv*		Compiled with the |iconv()| function
-   *+iconv/dyn*		Likewise |iconv-dynamic| |/dyn|
-N  *+insert_expand*	|insert_expand| Insert mode completion
-m  *+job*		starting and stopping jobs |job|
-S  *+jumplist*		|jumplist|
-B  *+keymap*		|'keymap'|
-N  *+lambda*		|lambda| and |closure|
-B  *+langmap*		|'langmap'|
-N  *+libcall*		|libcall()|
-N  *+linebreak*		|'linebreak'|, |'breakat'| and |'showbreak'|
-N  *+lispindent*	|'lisp'|
-T  *+listcmds*		Vim commands for the list of buffers |buffer-hidden|
-			and argument list |:argdelete|
-N  *+localmap*		Support for mappings local to a buffer |:map-local|
-m  *+lua*		|Lua| interface
-m  *+lua/dyn*		|Lua| interface |/dyn|
-N  *+menu*		|:menu|
-N  *+mksession*		|:mksession|
-N  *+modify_fname*	|filename-modifiers|
-N  *+mouse*		Mouse handling |mouse-using|
-N  *+mouseshape*	|'mouseshape'|
-B  *+mouse_dec*		Unix only: Dec terminal mouse handling |dec-mouse|
-N  *+mouse_gpm*		Unix only: Linux console mouse handling |gpm-mouse|
-N  *+mouse_jsbterm*	JSB mouse handling |jsbterm-mouse|
-B  *+mouse_netterm*	Unix only: netterm mouse handling |netterm-mouse|
-N  *+mouse_pterm*	QNX only: pterm mouse handling |qnx-terminal|
-N  *+mouse_sysmouse*	Unix only: *BSD console mouse handling |sysmouse|
-B  *+mouse_sgr*		Unix only: sgr mouse handling |sgr-mouse|
-B  *+mouse_urxvt*	Unix only: urxvt mouse handling |urxvt-mouse|
-N  *+mouse_xterm*	Unix only: xterm mouse handling |xterm-mouse|
-N  *+multi_byte*	16 and 32 bit characters |multibyte|
-   *+multi_byte_ime*	Win32 input method for multibyte chars |multibyte-ime|
-N  *+multi_lang*	non-English language support |multi-lang|
-m  *+mzscheme*		Mzscheme interface |mzscheme|
-m  *+mzscheme/dyn*	Mzscheme interface |mzscheme-dynamic| |/dyn|
-m  *+netbeans_intg*	|netbeans|
-   *+num64*		64-bit Number support |Number|
-m  *+ole*		Win32 GUI only: |ole-interface|
-N  *+packages*		Loading |packages|
-N  *+path_extra*	Up/downwards search in 'path' and 'tags'
-m  *+perl*		Perl interface |perl|
-m  *+perl/dyn*		Perl interface |perl-dynamic| |/dyn|
-N  *+persistent_undo*	Persistent undo |undo-persistence|
-   *+postscript*	|:hardcopy| writes a PostScript file
-N  *+printer*		|:hardcopy| command
-H  *+profile*		|:profile| command
-m  *+python*		Python 2 interface |python|
-m  *+python/dyn*	Python 2 interface |python-dynamic| |/dyn|
-m  *+python3*		Python 3 interface |python|
-m  *+python3/dyn*	Python 3 interface |python-dynamic| |/dyn|
-N  *+quickfix*		|:make| and |quickfix| commands
-N  *+reltime*		|reltime()| function, 'hlsearch'/'incsearch' timeout,
-			'redrawtime' option
-B  *+rightleft*		Right to left typing |'rightleft'|
-m  *+ruby*		Ruby interface |ruby|
-m  *+ruby/dyn*		Ruby interface |ruby-dynamic| |/dyn|
-T  *+scrollbind*	|'scrollbind'|
-B  *+signs*		|:sign|
-N  *+smartindent*	|'smartindent'|
-N  *+startuptime*	|--startuptime| argument
-N  *+statusline*	Options 'statusline', 'rulerformat' and special
-			formats of 'titlestring' and 'iconstring'
-m  *+sun_workshop*	|workshop|
-N  *+syntax*		Syntax highlighting |syntax|
-   *+system()*		Unix only: opposite of |+fork|
-T  *+tag_binary*	binary searching in tags file |tag-binary-search|
-N  *+tag_old_static*	old method for static tags |tag-old-static|
-m  *+tag_any_white*	any white space allowed in tags file |tag-any-white|
-m  *+tcl*		Tcl interface |tcl|
-m  *+tcl/dyn*		Tcl interface |tcl-dynamic| |/dyn|
-m  *+terminal*		Support for terminal window |terminal|
-   *+terminfo*		uses |terminfo| instead of termcap
-N  *+termresponse*	support for |t_RV| and |v:termresponse|
-B  *+termguicolors*	24-bit color in xterm-compatible terminals support
-N  *+textobjects*	|text-objects| selection
-   *+tgetent*		non-Unix only: able to use external termcap
-N  *+timers*		the |timer_start()| function
-N  *+title*		Setting the window 'title' and 'icon'
-N  *+toolbar*		|gui-toolbar|
-N  *+user_commands*	User-defined commands. |user-commands|
-N  *+viminfo*		|'viminfo'|
-   *+vertsplit*		Vertically split windows |:vsplit|; Always enabled
-			since 8.0.1118.
-			in sync with the |+windows| feature
-N  *+virtualedit*	|'virtualedit'|
-S  *+visual*		Visual mode |Visual-mode| Always enabled since 7.4.200.
-N  *+visualextra*	extra Visual mode commands |blockwise-operators|
-N  *+vreplace*		|gR| and |gr|
-   *+vtp*		on MS-Windows console: support for 'termguicolors'
-N  *+wildignore*	|'wildignore'|
-N  *+wildmenu*		|'wildmenu'|
-   *+windows*		more than one window; Always enabled since 8.0.1118.
-m  *+writebackup*	|'writebackup'| is default on
-m  *+xim*		X input method |xim|
-   *+xfontset*		X fontset support |xfontset|
-   *+xpm*		pixmap support
-m  *+xpm_w32*		Win32 GUI only: pixmap support |w32-xpm-support|
-   *+xsmp*		XSMP (X session management) support
-   *+xsmp_interact*	interactive XSMP (X session management) support
-N  *+xterm_clipboard*	Unix only: xterm clipboard handling
-m  *+xterm_save*	save and restore xterm screen |xterm-screens|
-N  *+X11*		Unix only: can restore window title |X11|
-
-							*/dyn* *E370* *E448*
-			To some of the features "/dyn" is added when the
-			feature is only available when the related library can
-			be dynamically loaded.
-
-:ve[rsion] {nr}		Is now ignored.  This was previously used to check the
-			version number of a .vimrc file.  It was removed,
-			because you can now use the ":if" command for
-			version-dependent behavior.  {not in Vi}
-
-							*:redi* *:redir*
-:redi[r][!] > {file}	Redirect messages to file {file}.  The messages which
-			are the output of commands are written to that file,
-			until redirection ends.  The messages are also still
-			shown on the screen.  When [!] is included, an
-			existing file is overwritten.  When [!] is omitted,
-			and {file} exists, this command fails.
-
-			Only one ":redir" can be active at a time.  Calls to
-			":redir" will close any active redirection before
-			starting redirection to the new target.  For recursive
-			use check out |execute()|.
-
-			To stop the messages and commands from being echoed to
-			the screen, put the commands in a function and call it
-			with ":silent call Function()".
-			An alternative is to use the 'verbosefile' option,
-			this can be used in combination with ":redir".
-			{not in Vi}
-
-:redi[r] >> {file}	Redirect messages to file {file}.  Append if {file}
-			already exists.  {not in Vi}
-
-:redi[r] @{a-zA-Z}
-:redi[r] @{a-zA-Z}>	Redirect messages to register {a-z}.  Append to the
-			contents of the register if its name is given
-			uppercase {A-Z}.  The ">" after the register name is
-			optional. {not in Vi}
-:redi[r] @{a-z}>>	Append messages to register {a-z}. {not in Vi}
-
-:redi[r] @*>		
-:redi[r] @+>		Redirect messages to the selection or clipboard. For
-			backward compatibility, the ">" after the register
-			name can be omitted. See |quotestar| and |quoteplus|.
-			{not in Vi}
-:redi[r] @*>>		
-:redi[r] @+>>		Append messages to the selection or clipboard.
-			{not in Vi}
-
-:redi[r] @">		Redirect messages to the unnamed register. For
-			backward compatibility, the ">" after the register
-			name can be omitted. {not in Vi}
-:redi[r] @">>		Append messages to the unnamed register. {not in Vi}
-
-:redi[r] => {var}	Redirect messages to a variable.  If the variable
-			doesn't exist, then it is created.  If the variable
-			exists, then it is initialized to an empty string.
-			The variable will remain empty until redirection ends.
-			Only string variables can be used.  After the
-			redirection starts, if the variable is removed or
-			locked or the variable type is changed, then further
-			command output messages will cause errors. {not in Vi}
-			To get the output of one command the |execute()|
-			function can be used.
-
-:redi[r] =>> {var}	Append messages to an existing variable.  Only string
-			variables can be used. {not in Vi}
-
-:redi[r] END		End redirecting messages.  {not in Vi}
-
-							*:filt* *:filter*
-:filt[er][!] {pat} {command}
-:filt[er][!] /{pat}/ {command}
-			Restrict the output of {command} to lines matching
-			with {pat}.  For example, to list only xml files: >
-				:filter /\.xml$/ oldfiles
-<			If the [!] is given, restrict the output of {command}
-			to lines that do NOT match {pat}.
-
-			{pat} is a Vim search pattern.  Instead of enclosing
-			it in / any non-ID character (see |'isident'|) can be
-			used, so long as it does not appear in {pat}.  Without
-			the enclosing character the pattern cannot include the
-			bar character.
-
-			The pattern is matched against the relevant part of
-			the output, not necessarily the whole line. Only some
-			commands support filtering, try it out to check if it
-			works.
-
-			Only normal messages are filtered, error messages are
-			not.
-
-						*:sil* *:silent* *:silent!*
-:sil[ent][!] {command}	Execute {command} silently.  Normal messages will not
-			be given or added to the message history.
-			When [!] is added, error messages will also be
-			skipped, and commands and mappings will not be aborted
-			when an error is detected.  |v:errmsg| is still set.
-			When [!] is not used, an error message will cause
-			further messages to be displayed normally.
-			Redirection, started with |:redir|, will continue as
-			usual, although there might be small differences.
-			This will allow redirecting the output of a command
-			without seeing it on the screen.  Example: >
-			    :redir >/tmp/foobar
-			    :silent g/Aap/p
-			    :redir END
-<			To execute a Normal mode command silently, use the
-			|:normal| command.  For example, to search for a
-			string without messages: >
-			    :silent exe "normal /path\<CR>"
-<			":silent!" is useful to execute a command that may
-			fail, but the failure is to be ignored.  Example: >
-			    :let v:errmsg = ""
-			    :silent! /^begin
-			    :if v:errmsg != ""
-			    : ... pattern was not found
-<			":silent" will also avoid the hit-enter prompt.  When
-			using this for an external command, this may cause the
-			screen to be messed up.  Use |CTRL-L| to clean it up
-			then.
-			":silent menu ..." defines a menu that will not echo a
-			Command-line command.  The command will still produce
-			messages though.  Use ":silent" in the command itself
-			to avoid that: ":silent menu .... :silent command".
-
-						*:uns* *:unsilent*
-:uns[ilent] {command}	Execute {command} not silently.  Only makes a
-			difference when |:silent| was used to get to this
-			command.
-			Use this for giving a message even when |:silent| was
-			used.  In this example |:silent| is used to avoid the
-			message about reading the file and |:unsilent| to be
-			able to list the first line of each file. >
-    		:silent argdo unsilent echo expand('%') . ": " . getline(1)
-<
-
-						*:verb* *:verbose*
-:[count]verb[ose] {command}
-			Execute {command} with 'verbose' set to [count].  If
-			[count] is omitted one is used. ":0verbose" can be
-			used to set 'verbose' to zero.
-			The additional use of ":silent" makes messages
-			generated but not displayed.
-			The combination of ":silent" and ":verbose" can be
-			used to generate messages and check them with
-			|v:statusmsg| and friends.  For example: >
-				:let v:statusmsg = ""
-				:silent verbose runtime foobar.vim
-				:if v:statusmsg != ""
-				:  " foobar.vim could not be found
-				:endif
-<			When concatenating another command, the ":verbose"
-			only applies to the first one: >
-				:4verbose set verbose | set verbose
-<				  verbose=4 ~
-				  verbose=0 ~
-			For logging verbose messages in a file use the
-			'verbosefile' option.
-
-							*:verbose-cmd*
-When 'verbose' is non-zero, listing the value of a Vim option or a key map or
-an abbreviation or a user-defined function or a command or a highlight group
-or an autocommand will also display where it was last defined.  If it was
-defined manually then there will be no "Last set" message.  When it was
-defined while executing a function, user command or autocommand, the script in
-which it was defined is reported.
-{not available when compiled without the |+eval| feature}
-
-							*K*
-K			Run a program to lookup the keyword under the
-			cursor.  The name of the program is given with the
-			'keywordprg' (kp) option (default is "man").  The
-			keyword is formed of letters, numbers and the
-			characters in 'iskeyword'.  The keyword under or
-			right of the cursor is used.  The same can be done
-			with the command >
-				:!{program} {keyword}
-<			There is an example of a program to use in the tools
-			directory of Vim.  It is called "ref" and does a
-			simple spelling check.
-			Special cases:
-			- If 'keywordprg' begins with ":" it is invoked as
-			  a Vim Ex command with [count].
-			- If 'keywordprg' is empty, the ":help" command is
-			  used.  It's a good idea to include more characters
-			  in 'iskeyword' then, to be able to find more help.
-			- When 'keywordprg' is equal to "man" or starts with
-			  ":", a [count] before "K" is inserted after
-			  keywordprg and before the keyword.  For example,
-			  using "2K" while the cursor is on "mkdir", results
-			  in: >
-				!man 2 mkdir
-<			- When 'keywordprg' is equal to "man -s", a count
-			  before "K" is inserted after the "-s".  If there is
-			  no count, the "-s" is removed.
-			{not in Vi}
-
-							*v_K*
-{Visual}K		Like "K", but use the visually highlighted text for
-			the keyword.  Only works when the highlighted text is
-			not more than one line.  {not in Vi}
-
-[N]gs							*gs* *:sl* *:sleep*
-:[N]sl[eep] [N]	[m]	Do nothing for [N] seconds.  When [m] is included,
-			sleep for [N] milliseconds.  The count for "gs" always
-			uses seconds.  The default is one second. >
-			     :sleep	     "sleep for one second
-			     :5sleep	     "sleep for five seconds
-			     :sleep 100m     "sleep for a hundred milliseconds
-			     10gs	     "sleep for ten seconds
-<			Can be interrupted with CTRL-C (CTRL-Break on MS-DOS).
-			"gs" stands for "goto sleep".
-			While sleeping the cursor is positioned in the text,
-			if at a visible position.  {not in Vi}
-			Also process the received netbeans messages. {only
-			available when compiled with the |+netbeans_intg|
-			feature}
-
-
-							*g_CTRL-A*
-g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
-			(which is very rare): print memory usage statistics.
-			Only useful for debugging Vim.
-			For incrementing in Visual mode see |v_g_CTRL-A|.
-
-==============================================================================
-2. Using Vim like less or more					*less*
-
-If you use the less or more program to view a file, you don't get syntax
-highlighting.  Thus you would like to use Vim instead.  You can do this by
-using the shell script "$VIMRUNTIME/macros/less.sh".
-
-This shell script uses the Vim script "$VIMRUNTIME/macros/less.vim".  It sets
-up mappings to simulate the commands that less supports.  Otherwise, you can
-still use the Vim commands.
-
-This isn't perfect.  For example, when viewing a short file Vim will still use
-the whole screen.  But it works good enough for most uses, and you get syntax
-highlighting.
-
-The "h" key will give you a short overview of the available commands.
-
-If you want to set options differently when using less, define the
-LessInitFunc in your vimrc, for example: >
-
-	func LessInitFunc()
-	  set nocursorcolumn nocursorline
-	endfunc
-<
-
- vim:tw=78:ts=8:ft=help:norl:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+<?php
+/**
+ * CodeIgniter
+ *
+ * An open source application development framework for PHP
+ *
+ * This content is released under the MIT License (MIT)
+ *
+ * Copyright (c) 2014 - 2018, British Columbia Institute of Technology
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package	CodeIgniter
+ * @author	EllisLab Dev Team
+ * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
+ * @copyright	Copyright (c) 2014 - 2018, British Columbia Institute of Technology (http://bcit.ca/)
+ * @license	http://opensource.org/licenses/MIT	MIT License
+ * @link	https://codeigniter.com
+ * @since	Version 1.0.0
+ * @filesource
+ */
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/**
+ * File Uploading Class
+ *
+ * @package		CodeIgniter
+ * @subpackage	Libraries
+ * @category	Uploads
+ * @author		EllisLab Dev Team
+ * @link		https://codeigniter.com/user_guide/libraries/file_uploading.html
+ */
+class CI_Upload {
+
+	/**
+	 * Maximum file size
+	 *
+	 * @var	int
+	 */
+	public $max_size = 0;
+
+	/**
+	 * Maximum image width
+	 *
+	 * @var	int
+	 */
+	public $max_width = 0;
+
+	/**
+	 * Maximum image height
+	 *
+	 * @var	int
+	 */
+	public $max_height = 0;
+
+	/**
+	 * Minimum image width
+	 *
+	 * @var	int
+	 */
+	public $min_width = 0;
+
+	/**
+	 * Minimum image height
+	 *
+	 * @var	int
+	 */
+	public $min_height = 0;
+
+	/**
+	 * Maximum filename length
+	 *
+	 * @var	int
+	 */
+	public $max_filename = 0;
+
+	/**
+	 * Maximum duplicate filename increment ID
+	 *
+	 * @var	int
+	 */
+	public $max_filename_increment = 100;
+
+	/**
+	 * Allowed file types
+	 *
+	 * @var	string
+	 */
+	public $allowed_types = '';
+
+	/**
+	 * Temporary filename
+	 *
+	 * @var	string
+	 */
+	public $file_temp = '';
+
+	/**
+	 * Filename
+	 *
+	 * @var	string
+	 */
+	public $file_name = '';
+
+	/**
+	 * Original filename
+	 *
+	 * @var	string
+	 */
+	public $orig_name = '';
+
+	/**
+	 * File type
+	 *
+	 * @var	string
+	 */
+	public $file_type = '';
+
+	/**
+	 * File size
+	 *
+	 * @var	int
+	 */
+	public $file_size = NULL;
+
+	/**
+	 * Filename extension
+	 *
+	 * @var	string
+	 */
+	public $file_ext = '';
+
+	/**
+	 * Force filename extension to lowercase
+	 *
+	 * @var	string
+	 */
+	public $file_ext_tolower = FALSE;
+
+	/**
+	 * Upload path
+	 *
+	 * @var	string
+	 */
+	public $upload_path = '';
+
+	/**
+	 * Overwrite flag
+	 *
+	 * @var	bool
+	 */
+	public $overwrite = FALSE;
+
+	/**
+	 * Obfuscate filename flag
+	 *
+	 * @var	bool
+	 */
+	public $encrypt_name = FALSE;
+
+	/**
+	 * Is image flag
+	 *
+	 * @var	bool
+	 */
+	public $is_image = FALSE;
+
+	/**
+	 * Image width
+	 *
+	 * @var	int
+	 */
+	public $image_width = NULL;
+
+	/**
+	 * Image height
+	 *
+	 * @var	int
+	 */
+	public $image_height = NULL;
+
+	/**
+	 * Image type
+	 *
+	 * @var	string
+	 */
+	public $image_type = '';
+
+	/**
+	 * Image size string
+	 *
+	 * @var	string
+	 */
+	public $image_size_str = '';
+
+	/**
+	 * Error messages list
+	 *
+	 * @var	array
+	 */
+	public $error_msg = array();
+
+	/**
+	 * Remove spaces flag
+	 *
+	 * @var	bool
+	 */
+	public $remove_spaces = TRUE;
+
+	/**
+	 * MIME detection flag
+	 *
+	 * @var	bool
+	 */
+	public $detect_mime = TRUE;
+
+	/**
+	 * XSS filter flag
+	 *
+	 * @var	bool
+	 */
+	public $xss_clean = FALSE;
+
+	/**
+	 * Apache mod_mime fix flag
+	 *
+	 * @var	bool
+	 */
+	public $mod_mime_fix = TRUE;
+
+	/**
+	 * Temporary filename prefix
+	 *
+	 * @var	string
+	 */
+	public $temp_prefix = 'temp_file_';
+
+	/**
+	 * Filename sent by the client
+	 *
+	 * @var	bool
+	 */
+	public $client_name = '';
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Filename override
+	 *
+	 * @var	string
+	 */
+	protected $_file_name_override = '';
+
+	/**
+	 * MIME types list
+	 *
+	 * @var	array
+	 */
+	protected $_mimes = array();
+
+	/**
+	 * CI Singleton
+	 *
+	 * @var	object
+	 */
+	protected $_CI;
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Constructor
+	 *
+	 * @param	array	$config
+	 * @return	void
+	 */
+	public function __construct($config = array())
+	{
+		empty($config) OR $this->initialize($config, FALSE);
+
+		$this->_mimes =& get_mimes();
+		$this->_CI =& get_instance();
+
+		log_message('info', 'Upload Class Initialized');
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Initialize preferences
+	 *
+	 * @param	array	$config
+	 * @param	bool	$reset
+	 * @return	CI_Upload
+	 */
+	public function initialize(array $config = array(), $reset = TRUE)
+	{
+		$reflection = new ReflectionClass($this);
+
+		if ($reset === TRUE)
+		{
+			$defaults = $reflection->getDefaultProperties();
+			foreach (array_keys($defaults) as $key)
+			{
+				if ($key[0] === '_')
+				{
+					continue;
+				}
+
+				if (isset($config[$key]))
+				{
+					if ($reflection->hasMethod('set_'.$key))
+					{
+						$this->{'set_'.$key}($config[$key]);
+					}
+					else
+					{
+						$this->$key = $config[$key];
+					}
+				}
+				else
+				{
+					$this->$key = $defaults[$key];
+				}
+			}
+		}
+		else
+		{
+			foreach ($config as $key => &$value)
+			{
+				if ($key[0] !== '_' && $reflection->hasProperty($key))
+				{
+					if ($reflection->hasMethod('set_'.$key))
+					{
+						$this->{'set_'.$key}($value);
+					}
+					else
+					{
+						$this->$key = $value;
+					}
+				}
+			}
+		}
+
+		// if a file_name was provided in the config, use it instead of the user input
+		// supplied file name for all uploads until initialized again
+		$this->_file_name_override = $this->file_name;
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Perform the file upload
+	 *
+	 * @param	string	$field
+	 * @return	bool
+	 */
+	public function do_upload($field = 'userfile')
+	{
+		// Is $_FILES[$field] set? If not, no reason to continue.
+		if (isset($_FILES[$field]))
+		{
+			$_file = $_FILES[$field];
+		}
+		// Does the field name contain array notation?
+		elseif (($c = preg_match_all('/(?:^[^\[]+)|\[[^]]*\]/', $field, $matches)) > 1)
+		{
+			$_file = $_FILES;
+			for ($i = 0; $i < $c; $i++)
+			{
+				// We can't track numeric iterations, only full field names are accepted
+				if (($field = trim($matches[0][$i], '[]')) === '' OR ! isset($_file[$field]))
+				{
+					$_file = NULL;
+					break;
+				}
+
+				$_file = $_file[$field];
+			}
+		}
+
+		if ( ! isset($_file))
+		{
+			$this->set_error('upload_no_file_selected', 'debug');
+			return FALSE;
+		}
+
+		// Is the upload path valid?
+		if ( ! $this->validate_upload_path())
+		{
+			// errors will already be set by validate_upload_path() so just return FALSE
+			return FALSE;
+		}
+
+		// Was the file able to be uploaded? If not, determine the reason why.
+		if ( ! is_uploaded_file($_file['tmp_name']))
+		{
+			$error = isset($_file['error']) ? $_file['error'] : 4;
+
+			switch ($error)
+			{
+				case UPLOAD_ERR_INI_SIZE:
+					$this->set_error('upload_file_exceeds_limit', 'info');
+					break;
+				case UPLOAD_ERR_FORM_SIZE:
+					$this->set_error('upload_file_exceeds_form_limit', 'info');
+					break;
+				case UPLOAD_ERR_PARTIAL:
+					$this->set_error('upload_file_partial', 'debug');
+					break;
+				case UPLOAD_ERR_NO_FILE:
+					$this->set_error('upload_no_file_selected', 'debug');
+					break;
+				case UPLOAD_ERR_NO_TMP_DIR:
+					$this->set_error('upload_no_temp_directory', 'error');
+					break;
+				case UPLOAD_ERR_CANT_WRITE:
+					$this->set_error('upload_unable_to_write_file', 'error');
+					break;
+				case UPLOAD_ERR_EXTENSION:
+					$this->set_error('upload_stopped_by_extension', 'debug');
+					break;
+				default:
+					$this->set_error('upload_no_file_selected', 'debug');
+					break;
+			}
+
+			return FALSE;
+		}
+
+		// Set the uploaded data as class variables
+		$this->file_temp = $_file['tmp_name'];
+		$this->file_size = $_file['size'];
+
+		// Skip MIME type detection?
+		if ($this->detect_mime !== FALSE)
+		{
+			$this->_file_mime_type($_file);
+		}
+
+		$this->file_type = preg_replace('/^(.+?);.*$/', '\\1', $this->file_type);
+		$this->file_type = strtolower(trim(stripslashes($this->file_type), '"'));
+		$this->file_name = $this->_prep_filename($_file['name']);
+		$this->file_ext	 = $this->get_extension($this->file_name);
+		$this->client_name = $this->file_name;
+
+		// Is the file type allowed to be uploaded?
+		if ( ! $this->is_allowed_filetype())
+		{
+			$this->set_error('upload_invalid_filetype', 'debug');
+			return FALSE;
+		}
+
+		// if we're overriding, let's now make sure the new name and type is allowed
+		if ($this->_file_name_override !== '')
+		{
+			$this->file_name = $this->_prep_filename($this->_file_name_override);
+
+			// If no extension was provided in the file_name config item, use the uploaded one
+			if (strpos($this->_file_name_override, '.') === FALSE)
+			{
+				$this->file_name .= $this->file_ext;
+			}
+			else
+			{
+				// An extension was provided, let's have it!
+				$this->file_ext	= $this->get_extension($this->_file_name_override);
+			}
+
+			if ( ! $this->is_allowed_filetype(TRUE))
+			{
+				$this->set_error('upload_invalid_filetype', 'debug');
+				return FALSE;
+			}
+		}
+
+		// Convert the file size to kilobytes
+		if ($this->file_size > 0)
+		{
+			$this->file_size = round($this->file_size/1024, 2);
+		}
+
+		// Is the file size within the allowed maximum?
+		if ( ! $this->is_allowed_filesize())
+		{
+			$this->set_error('upload_invalid_filesize', 'info');
+			return FALSE;
+		}
+
+		// Are the image dimensions within the allowed size?
+		// Note: This can fail if the server has an open_basedir restriction.
+		if ( ! $this->is_allowed_dimensions())
+		{
+			$this->set_error('upload_invalid_dimensions', 'info');
+			return FALSE;
+		}
+
+		// Sanitize the file name for security
+		$this->file_name = $this->_CI->security->sanitize_filename($this->file_name);
+
+		// Truncate the file name if it's too long
+		if ($this->max_filename > 0)
+		{
+			$this->file_name = $this->limit_filename_length($this->file_name, $this->max_filename);
+		}
+
+		// Remove white spaces in the name
+		if ($this->remove_spaces === TRUE)
+		{
+			$this->file_name = preg_replace('/\s+/', '_', $this->file_name);
+		}
+
+		if ($this->file_ext_tolower && ($ext_length = strlen($this->file_ext)))
+		{
+			// file_ext was previously lower-cased by a get_extension() call
+			$this->file_name = substr($this->file_name, 0, -$ext_length).$this->file_ext;
+		}
+
+		/*
+		 * Validate the file name
+		 * This function appends an number onto the end of
+		 * the file if one with the same name already exists.
+		 * If it returns false there was a problem.
+		 */
+		$this->orig_name = $this->file_name;
+		if (FALSE === ($this->file_name = $this->set_filename($this->upload_path, $this->file_name)))
+		{
+			return FALSE;
+		}
+
+		/*
+		 * Run the file through the XSS hacking filter
+		 * This helps prevent malicious code from being
+		 * embedded within a file. Scripts can easily
+		 * be disguised as images or other file types.
+		 */
+		if ($this->xss_clean && $this->do_xss_clean() === FALSE)
+		{
+			$this->set_error('upload_unable_to_write_file', 'error');
+			return FALSE;
+		}
+
+		/*
+		 * Move the file to the final destination
+		 * To deal with different server configurations
+		 * we'll attempt to use copy() first. If that fails
+		 * we'll use move_uploaded_file(). One of the two should
+		 * reliably work in most environments
+		 */
+		if ( ! @copy($this->file_temp, $this->upload_path.$this->file_name))
+		{
+			if ( ! @move_uploaded_file($this->file_temp, $this->upload_path.$this->file_name))
+			{
+				$this->set_error('upload_destination_error', 'error');
+				return FALSE;
+			}
+		}
+
+		/*
+		 * Set the finalized image dimensions
+		 * This sets the image width/height (assuming the
+		 * file was an image). We use this information
+		 * in the "data" function.
+		 */
+		$this->set_image_properties($this->upload_path.$this->file_name);
+
+		return TRUE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Finalized Data Array
+	 *
+	 * Returns an associative array containing all of the information
+	 * related to the upload, allowing the developer easy access in one array.
+	 *
+	 * @param	string	$index
+	 * @return	mixed
+	 */
+	public function data($index = NULL)
+	{
+		$data = array(
+				'file_name'		=> $this->file_name,
+				'file_type'		=> $this->file_type,
+				'file_path'		=> $this->upload_path,
+				'full_path'		=> $this->upload_path.$this->file_name,
+				'raw_name'		=> substr($this->file_name, 0, -strlen($this->file_ext)),
+				'orig_name'		=> $this->orig_name,
+				'client_name'		=> $this->client_name,
+				'file_ext'		=> $this->file_ext,
+				'file_size'		=> $this->file_size,
+				'is_image'		=> $this->is_image(),
+				'image_width'		=> $this->image_width,
+				'image_height'		=> $this->image_height,
+				'image_type'		=> $this->image_type,
+				'image_size_str'	=> $this->image_size_str,
+			);
+
+		if ( ! empty($index))
+		{
+			return isset($data[$index]) ? $data[$index] : NULL;
+		}
+
+		return $data;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set Upload Path
+	 *
+	 * @param	string	$path
+	 * @return	CI_Upload
+	 */
+	public function set_upload_path($path)
+	{
+		// Make sure it has a trailing slash
+		$this->upload_path = rtrim($path, '/').'/';
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set the file name
+	 *
+	 * This function takes a filename/path as input and looks for the
+	 * existence of a file with the same name. If found, it will append a
+	 * number to the end of the filename to avoid overwriting a pre-existing file.
+	 *
+	 * @param	string	$path
+	 * @param	string	$filename
+	 * @return	string
+	 */
+	public function set_filename($path, $filename)
+	{
+		if ($this->encrypt_name === TRUE)
+		{
+			$filename = md5(uniqid(mt_rand())).$this->file_ext;
+		}
+
+		if ($this->overwrite === TRUE OR ! file_exists($path.$filename))
+		{
+			return $filename;
+		}
+
+		$filename = str_replace($this->file_ext, '', $filename);
+
+		$new_filename = '';
+		for ($i = 1; $i < $this->max_filename_increment; $i++)
+		{
+			if ( ! file_exists($path.$filename.$i.$this->file_ext))
+			{
+				$new_filename = $filename.$i.$this->file_ext;
+				break;
+			}
+		}
+
+		if ($new_filename === '')
+		{
+			$this->set_error('upload_bad_filename', 'debug');
+			return FALSE;
+		}
+
+		return $new_filename;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set Maximum File Size
+	 *
+	 * @param	int	$n
+	 * @return	CI_Upload
+	 */
+	public function set_max_filesize($n)
+	{
+		$this->max_size = ($n < 0) ? 0 : (int) $n;
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set Maximum File Size
+	 *
+	 * An internal alias to set_max_filesize() to help with configuration
+	 * as initialize() will look for a set_<property_name>() method ...
+	 *
+	 * @param	int	$n
+	 * @return	CI_Upload
+	 */
+	protected function set_max_size($n)
+	{
+		return $this->set_max_filesize($n);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set Maximum File Name Length
+	 *
+	 * @param	int	$n
+	 * @return	CI_Upload
+	 */
+	public function set_max_filename($n)
+	{
+		$this->max_filename = ($n < 0) ? 0 : (int) $n;
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set Maximum Image Width
+	 *
+	 * @param	int	$n
+	 * @return	CI_Upload
+	 */
+	public function set_max_width($n)
+	{
+		$this->max_width = ($n < 0) ? 0 : (int) $n;
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set Maximum Image Height
+	 *
+	 * @param	int	$n
+	 * @return	CI_Upload
+	 */
+	public function set_max_height($n)
+	{
+		$this->max_height = ($n < 0) ? 0 : (int) $n;
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set minimum image width
+	 *
+	 * @param	int	$n
+	 * @return	CI_Upload
+	 */
+	public function set_min_width($n)
+	{
+		$this->min_width = ($n < 0) ? 0 : (int) $n;
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set minimum image height
+	 *
+	 * @param	int	$n
+	 * @return	CI_Upload
+	 */
+	public function set_min_height($n)
+	{
+		$this->min_height = ($n < 0) ? 0 : (int) $n;
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set Allowed File Types
+	 *
+	 * @param	mixed	$types
+	 * @return	CI_Upload
+	 */
+	public function set_allowed_types($types)
+	{
+		$this->allowed_types = (is_array($types) OR $types === '*')
+			? $types
+			: explode('|', $types);
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set Image Properties
+	 *
+	 * Uses GD to determine the width/height/type of image
+	 *
+	 * @param	string	$path
+	 * @return	CI_Upload
+	 */
+	public function set_image_properties($path = '')
+	{
+		if ($this->is_image() && function_exists('getimagesize'))
+		{
+			if (FALSE !== ($D = @getimagesize($path)))
+			{
+				$types = array(1 => 'gif', 2 => 'jpeg', 3 => 'png');
+
+				$this->image_width	= $D[0];
+				$this->image_height	= $D[1];
+				$this->image_type	= isset($types[$D[2]]) ? $types[$D[2]] : 'unknown';
+				$this->image_size_str	= $D[3]; // string containing height and width
+			}
+		}
+
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set XSS Clean
+	 *
+	 * Enables the XSS flag so that the file that was uploaded
+	 * will be run through the XSS filter.
+	 *
+	 * @param	bool	$flag
+	 * @return	CI_Upload
+	 */
+	public function set_xss_clean($flag = FALSE)
+	{
+		$this->xss_clean = ($flag === TRUE);
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Validate the image
+	 *
+	 * @return	bool
+	 */
+	public function is_image()
+	{
+		// IE will sometimes return odd mime-types during upload, so here we just standardize all
+		// jpegs or pngs to the same file type.
+
+		$png_mimes  = array('image/x-png');
+		$jpeg_mimes = array('image/jpg', 'image/jpe', 'image/jpeg', 'image/pjpeg');
+
+		if (in_array($this->file_type, $png_mimes))
+		{
+			$this->file_type = 'image/png';
+		}
+		elseif (in_array($this->file_type, $jpeg_mimes))
+		{
+			$this->file_type = 'image/jpeg';
+		}
+
+		$img_mimes = array('image/gif',	'image/jpeg', 'image/png');
+
+		return in_array($this->file_type, $img_mimes, TRUE);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Verify that the filetype is allowed
+	 *
+	 * @param	bool	$ignore_mime
+	 * @return	bool
+	 */
+	public function is_allowed_filetype($ignore_mime = FALSE)
+	{
+		if ($this->allowed_types === '*')
+		{
+			return TRUE;
+		}
+
+		if (empty($this->allowed_types) OR ! is_array($this->allowed_types))
+		{
+			$this->set_error('upload_no_file_types', 'debug');
+			return FALSE;
+		}
+
+		$ext = strtolower(ltrim($this->file_ext, '.'));
+
+		if ( ! in_array($ext, $this->allowed_types, TRUE))
+		{
+			return FALSE;
+		}
+
+		// Images get some additional checks
+		if (in_array($ext, array('gif', 'jpg', 'jpeg', 'jpe', 'png'), TRUE) && @getimagesize($this->file_temp) === FALSE)
+		{
+			return FALSE;
+		}
+
+		if ($ignore_mime === TRUE)
+		{
+			return TRUE;
+		}
+
+		if (isset($this->_mimes[$ext]))
+		{
+			return is_array($this->_mimes[$ext])
+				? in_array($this->file_type, $this->_mimes[$ext], TRUE)
+				: ($this->_mimes[$ext] === $this->file_type);
+		}
+
+		return FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Verify that the file is within the allowed size
+	 *
+	 * @return	bool
+	 */
+	public function is_allowed_filesize()
+	{
+		return ($this->max_size === 0 OR $this->max_size > $this->file_size);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Verify that the image is within the allowed width/height
+	 *
+	 * @return	bool
+	 */
+	public function is_allowed_dimensions()
+	{
+		if ( ! $this->is_image())
+		{
+			return TRUE;
+		}
+
+		if (function_exists('getimagesize'))
+		{
+			$D = @getimagesize($this->file_temp);
+
+			if ($this->max_width > 0 && $D[0] > $this->max_width)
+			{
+				return FALSE;
+			}
+
+			if ($this->max_height > 0 && $D[1] > $this->max_height)
+			{
+				return FALSE;
+			}
+
+			if ($this->min_width > 0 && $D[0] < $this->min_width)
+			{
+				return FALSE;
+			}
+
+			if ($this->min_height > 0 && $D[1] < $this->min_height)
+			{
+				return FALSE;
+			}
+		}
+
+		return TRUE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Validate Upload Path
+	 *
+	 * Verifies that it is a valid upload path with proper permissions.
+	 *
+	 * @return	bool
+	 */
+	public function validate_upload_path()
+	{
+		if ($this->upload_path === '')
+		{
+			$this->set_error('upload_no_filepath', 'error');
+			return FALSE;
+		}
+
+		if (realpath($this->upload_path) !== FALSE)
+		{
+			$this->upload_path = str_replace('\\', '/', realpath($this->upload_path));
+		}
+
+		if ( ! is_dir($this->upload_path))
+		{
+			$this->set_error('upload_no_filepath', 'error');
+			return FALSE;
+		}
+
+		if ( ! is_really_writable($this->upload_path))
+		{
+			$this->set_error('upload_not_writable', 'error');
+			return FALSE;
+		}
+
+		$this->upload_path = preg_replace('/(.+?)\/*$/', '\\1/',  $this->upload_path);
+		return TRUE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Extract the file extension
+	 *
+	 * @param	string	$filename
+	 * @return	string
+	 */
+	public function get_extension($filename)
+	{
+		$x = explode('.', $filename);
+
+		if (count($x) === 1)
+		{
+			return '';
+		}
+
+		$ext = ($this->file_ext_tolower) ? strtolower(end($x)) : end($x);
+		return '.'.$ext;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Limit the File Name Length
+	 *
+	 * @param	string	$filename
+	 * @param	int	$length
+	 * @return	string
+	 */
+	public function limit_filename_length($filename, $length)
+	{
+		if (strlen($filename) < $length)
+		{
+			return $filename;
+		}
+
+		$ext = '';
+		if (strpos($filename, '.') !== FALSE)
+		{
+			$parts		= explode('.', $filename);
+			$ext		= '.'.array_pop($parts);
+			$filename	= implode('.', $parts);
+		}
+
+		return substr($filename, 0, ($length - strlen($ext))).$ext;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Runs the file through the XSS clean function
+	 *
+	 * This prevents people from embedding malicious code in their files.
+	 * I'm not sure that it won't negatively affect certain files in unexpected ways,
+	 * but so far I haven't found that it causes trouble.
+	 *
+	 * @return	string
+	 */
+	public function do_xss_clean()
+	{
+		$file = $this->file_temp;
+
+		if (filesize($file) == 0)
+		{
+			return FALSE;
+		}
+
+		if (memory_get_usage() && ($memory_limit = ini_get('memory_limit')) > 0)
+		{
+			$memory_limit = str_split($memory_limit, strspn($memory_limit, '1234567890'));
+			if ( ! empty($memory_limit[1]))
+			{
+				switch ($memory_limit[1][0])
+				{
+					case 'g':
+					case 'G':
+						$memory_limit[0] *= 1024 * 1024 * 1024;
+						break;
+					case 'm':
+					case 'M':
+						$memory_limit[0] *= 1024 * 1024;
+						break;
+					default:
+						break;
+				}
+			}
+
+			$memory_limit = (int) ceil(filesize($file) + $memory_limit[0]);
+			ini_set('memory_limit', $memory_limit); // When an integer is used, the value is measured in bytes. - PHP.net
+		}
+
+		// If the file being uploaded is an image, then we should have no problem with XSS attacks (in theory), but
+		// IE can be fooled into mime-type detecting a malformed image as an html file, thus executing an XSS attack on anyone
+		// using IE who looks at the image. It does this by inspecting the first 255 bytes of an image. To get around this
+		// CI will itself look at the first 255 bytes of an image to determine its relative safety. This can save a lot of
+		// processor power and time if it is actually a clean image, as it will be in nearly all instances _except_ an
+		// attempted XSS attack.
+
+		if (function_exists('getimagesize') && @getimagesize($file) !== FALSE)
+		{
+			if (($file = @fopen($file, 'rb')) === FALSE) // "b" to force binary
+			{
+				return FALSE; // Couldn't open the file, return FALSE
+			}
+
+			$opening_bytes = fread($file, 256);
+			fclose($file);
+
+			// These are known to throw IE into mime-type detection chaos
+			// <a, <body, <head, <html, <img, <plaintext, <pre, <script, <table, <title
+			// title is basically just in SVG, but we filter it anyhow
+
+			// if it's an image or no "triggers" detected in the first 256 bytes - we're good
+			return ! preg_match('/<(a|body|head|html|img|plaintext|pre|script|table|title)[\s>]/i', $opening_bytes);
+		}
+
+		if (($data = @file_get_contents($file)) === FALSE)
+		{
+			return FALSE;
+		}
+
+		return $this->_CI->security->xss_clean($data, TRUE);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set an error message
+	 *
+	 * @param	string	$msg
+	 * @return	CI_Upload
+	 */
+	public function set_error($msg, $log_level = 'error')
+	{
+		$this->_CI->lang->load('upload');
+
+		is_array($msg) OR $msg = array($msg);
+		foreach ($msg as $val)
+		{
+			$msg = ($this->_CI->lang->line($val) === FALSE) ? $val : $this->_CI->lang->line($val);
+			$this->error_msg[] = $msg;
+			log_message($log_level, $msg);
+		}
+
+		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Display the error message
+	 *
+	 * @param	string	$open
+	 * @param	string	$close
+	 * @return	string
+	 */
+	public function display_errors($open = '<p>', $close = '</p>')
+	{
+		return (count($this->error_msg) > 0) ? $open.implode($close.$open, $this->error_msg).$close : '';
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Prep Filename
+	 *
+	 * Prevents possible script execution from Apache's handling
+	 * of files' multiple extensions.
+	 *
+	 * @link	http://httpd.apache.org/docs/1.3/mod/mod_mime.html#multipleext
+	 *
+	 * @param	string	$filename
+	 * @return	string
+	 */
+	protected function _prep_filename($filename)
+	{
+		if ($this->mod_mime_fix === FALSE OR $this->allowed_types === '*' OR ($ext_pos = strrpos($filename, '.')) === FALSE)
+		{
+			return $filename;
+		}
+
+		$ext = substr($filename, $ext_pos);
+		$filename = substr($filename, 0, $ext_pos);
+		return str_replace('.', '_', $filename).$ext;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * File MIME type
+	 *
+	 * Detects the (actual) MIME type of the uploaded file, if possible.
+	 * The input array is expected to be $_FILES[$field]
+	 *
+	 * @param	array	$file
+	 * @return	void
+	 */
+	protected function _file_mime_type($file)
+	{
+		// We'll need this to validate the MIME info string (e.g. text/plain; charset=us-ascii)
+		$regexp = '/^([a-z\-]+\/[a-z0-9\-\.\+]+)(;\s.+)?$/';
+
+		/**
+		 * Fileinfo extension - most reliable method
+		 *
+		 * Apparently XAMPP, CentOS, cPanel and who knows what
+		 * other PHP distribution channels EXPLICITLY DISABLE
+		 * ext/fileinfo, which is otherwise enabled by default
+		 * since PHP 5.3 ...
+		 */
+		if (function_exists('finfo_file'))
+		{
+			$finfo = @finfo_open(FILEINFO_MIME);
+			if (is_resource($finfo)) // It is possible that a FALSE value is returned, if there is no magic MIME database file found on the system
+			{
+				$mime = @finfo_file($finfo, $file['tmp_name']);
+				finfo_close($finfo);
+
+				/* According to the comments section of the PHP manual page,
+				 * it is possible that this function returns an empty string
+				 * for some files (e.g. if they don't exist in the magic MIME database)
+				 */
+				if (is_string($mime) && preg_match($regexp, $mime, $matches))
+				{
+					$this->file_type = $matches[1];
+					return;
+				}
+			}
+		}
+
+		/* This is an ugly hack, but UNIX-type systems provide a "native" way to detect the file type,
+		 * which is still more secure than depending on the value of $_FILES[$field]['type'], and as it
+		 * was reported in issue #750 (https://github.com/EllisLab/CodeIgniter/issues/750) - it's better
+		 * than mime_content_type() as well, hence the attempts to try calling the command line with
+		 * three different functions.
+		 *
+		 * Notes:
+		 *	- the DIRECTORY_SEPARATOR comparison ensures that we're not on a Windows system
+		 *	- many system admins would disable the exec(), shell_exec(), popen() and similar functions
+		 *	  due to security concerns, hence the function_usable() checks
+		 */
+		if (DIRECTORY_SEPARATOR !== '\\')
+		{
+			$cmd = function_exists('escapeshellarg')
+				? 'file --brief --mime '.escapeshellarg($file['tmp_name']).' 2>&1'
+				: 'file --brief --mime '.$file['tmp_name'].' 2>&1';
+
+			if (function_usable('exec'))
+			{
+				/* This might look confusing, as $mime is being populated with all of the output when set in the second parameter.
+				 * However, we only need the last line, which is the actual return value of exec(), and as such - it overwrites
+				 * anything that could already be set for $mime previously. This effectively makes the second parameter a dummy
+				 * value, which is only put to allow us to get the return status code.
+				 */
+				$mime = @exec($cmd, $mime, $return_status);
+				if ($return_status === 0 && is_string($mime) && preg_match($regexp, $mime, $matches))
+				{
+					$this->file_type = $matches[1];
+					return;
+				}
+			}
+
+			if ( ! ini_get('safe_mode') && function_usable('shell_exec'))
+			{
+				$mime = @shell_exec($cmd);
+				if (strlen($mime) > 0)
+				{
+					$mime = explode("\n", trim($mime));
+					if (preg_match($regexp, $mime[(count($mime) - 1)], $matches))
+					{
+						$this->file_type = $matches[1];
+						return;
+					}
+				}
+			}
+
+			if (function_usable('popen'))
+			{
+				$proc = @popen($cmd, 'r');
+				if (is_resource($proc))
+				{
+					$mime = @fread($proc, 512);
+					@pclose($proc);
+					if ($mime !== FALSE)
+					{
+						$mime = explode("\n", trim($mime));
+						if (preg_match($regexp, $mime[(count($mime) - 1)], $matches))
+						{
+							$this->file_type = $matches[1];
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		// Fall back to mime_content_type(), if available (still better than $_FILES[$field]['type'])
+		if (function_exists('mime_content_type'))
+		{
+			$this->file_type = @mime_content_type($file['tmp_name']);
+			if (strlen($this->file_type) > 0) // It's possible that mime_content_type() returns FALSE or an empty string
+			{
+				return;
+			}
+		}
+
+		$this->file_type = $file['type'];
+	}
+
+}

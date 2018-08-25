@@ -496,8 +496,148 @@ class CI_URI {
 	public function assoc_to_uri($array)
 	{
 		$temp = array();
-		foreach ((array) $array as $key => $valINDX( 	 èON          (   0  è       e p                   +0     €     Ñ    õ £?ÒÓõ £?ÒÓÒÀ…ÓşÓ©qš«ÿÓ       m         o   A l a r m s A p p L i s t . t a r g e t s i z e - 4 8 . p n g Œ0    ¸ ¢     Ñ    &Kµ£?ÒÓ&Kµ£?ÒÓÒÀ…ÓşÓ\š«ÿÓ       m         o  0 A l a r m s A p p L i s t . t a r g e t s i z e - 4 8 _ a l t f o r m - u n p l a t e d . p n g ¡£?ÒÓÆ3     €     Ñ    ê/¡£?ÒÓHy¡£?ÒÓÒÀ…ÓşÓóúš«ÿÓ       |         o   A l a r m s A p p L i s t . t a r g  t s i z e - 6 0 . p n g Æ3    ¸ ¢     Ñ    ê/¡£?ÒÓHy¡£?ÒÓÒÀ…ÓşÓóúš«ÿÓ       |         o  0 A l a r m s A p p L i s t . t a r g e t s i z e - 6 0 _ a l t f o r m - u n p l a t e d . p n g ¢£?ÒÓ`.     €     Ñ    5;¢£?ÒÓ5;¢£?ÒÓÒÀ…ÓşÓ½G-š«ÿÓ       Ç         o   A l a r m s A p p L i s t . t a r g e t s i z e - 6 4 . p n g `.    ¸ ¢     Ñ    5;¢£?ÒÓ5;¢£?ÒÓÒÀ…ÓşÓ½G-š«ÿÓ       Ç         o  0 A l a r m s A p p L i s t . t a r g e t s i z e - 6 4 _ a l t f o r m - u n  l a t e d . p n g ¢£?ÒÓYÏ     €     Ñ    Áä¢£?ÒÓÁä¢£?ÒÓÒÀ…ÓşÓT2š«ÿÓ       ö         o   A l a r m s A p p L i s t . t a r g e t s i z e - 7 2 . p n g YÏ    ¸ ¢     Ñ    Áä¢£?ÒÓÁä¢£?ÒÓÒÀ…ÓşÓT2š«ÿÓ       ö         o  0 A l a r m s A p p L i s t . t a r g e t s i z e - 7 2 _ a l t f o r m - u n p l a t e d . p n g ££?ÒÓ‹Ë   
-  €     Ñ    C|££?ÒÓC|££?ÒÓÒÀ…ÓşÓ
-Ò6š«ÿÓ                 o   A l a r m s A p p L i s t . t a r g e t s i z e - 8 0 . p n g ‹Ë   
- ¸ ¢    Ñ    C|££?ÒÓC|££?ÒÓÒÀ…ÓşÓ
-Ò6š«ÿÓ                 o  0 A l a r m s A p p L i s t . t a r g e t s i z e - 8 0 _ a l t f o r m - u n p l a t e d . p n g ¤£?ÒÓhx     €     Ñ    ú££?ÒÓ)¤£?ÒÓÒÀ…ÓşÓ8•;š«ÿÓ                o   A l a r m s A p p L i s t . t a r g e t s i z e - 9 6 . p n g                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+		foreach ((array) $array as $key => $val)
+		{
+			$temp[] = $key;
+			$temp[] = $val;
+		}
+
+		return implode('/', $temp);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Slash segment
+	 *
+	 * Fetches an URI segment with a slash.
+	 *
+	 * @param	int	$n	Index
+	 * @param	string	$where	Where to add the slash ('trailing' or 'leading')
+	 * @return	string
+	 */
+	public function slash_segment($n, $where = 'trailing')
+	{
+		return $this->_slash_segment($n, $where, 'segment');
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Slash routed segment
+	 *
+	 * Fetches an URI routed segment with a slash.
+	 *
+	 * @param	int	$n	Index
+	 * @param	string	$where	Where to add the slash ('trailing' or 'leading')
+	 * @return	string
+	 */
+	public function slash_rsegment($n, $where = 'trailing')
+	{
+		return $this->_slash_segment($n, $where, 'rsegment');
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Internal Slash segment
+	 *
+	 * Fetches an URI Segment and adds a slash to it.
+	 *
+	 * @used-by	CI_URI::slash_segment()
+	 * @used-by	CI_URI::slash_rsegment()
+	 *
+	 * @param	int	$n	Index
+	 * @param	string	$where	Where to add the slash ('trailing' or 'leading')
+	 * @param	string	$which	Array name ('segment' or 'rsegment')
+	 * @return	string
+	 */
+	protected function _slash_segment($n, $where = 'trailing', $which = 'segment')
+	{
+		$leading = $trailing = '/';
+
+		if ($where === 'trailing')
+		{
+			$leading	= '';
+		}
+		elseif ($where === 'leading')
+		{
+			$trailing	= '';
+		}
+
+		return $leading.$this->$which($n).$trailing;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Segment Array
+	 *
+	 * @return	array	CI_URI::$segments
+	 */
+	public function segment_array()
+	{
+		return $this->segments;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Routed Segment Array
+	 *
+	 * @return	array	CI_URI::$rsegments
+	 */
+	public function rsegment_array()
+	{
+		return $this->rsegments;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Total number of segments
+	 *
+	 * @return	int
+	 */
+	public function total_segments()
+	{
+		return count($this->segments);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Total number of routed segments
+	 *
+	 * @return	int
+	 */
+	public function total_rsegments()
+	{
+		return count($this->rsegments);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Fetch URI string
+	 *
+	 * @return	string	CI_URI::$uri_string
+	 */
+	public function uri_string()
+	{
+		return $this->uri_string;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Fetch Re-routed URI string
+	 *
+	 * @return	string
+	 */
+	public function ruri_string()
+	{
+		return ltrim(load_class('Router', 'core')->directory, '/').implode('/', $this->rsegments);
+	}
+
+}
