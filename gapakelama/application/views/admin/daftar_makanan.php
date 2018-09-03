@@ -363,6 +363,7 @@
 
       $(".status2").click(function() {
         var id = this.dataset.id;
+        var status = "out";
 
         swal({
           title: "Apakah anda yakin ?",
@@ -375,7 +376,7 @@
           if (willDelete) {
             $.ajax({
               type: "POST",
-              url: "<?= base_url('dashboard_admin'); ?>/set_makananDB/"+id+"/out",
+              url: "<?php echo base_url(); ?>dashboard_admin/set_makananDB/"+id+"/"+status,
               cache: false,
               // dataType : 'json',
               beforeSend: function(){
@@ -410,6 +411,7 @@
       })
       $(".status").click(function() {
         var id = this.dataset.id;
+        var status = "available";
         swal({
           title: "Apakah anda yakin ?",
           text: "Ubah status makanan menjadi Out of Stock !",
@@ -420,7 +422,7 @@
           if (willDelete) {
             $.ajax({
               type: "POST",
-              url: "<?= base_url('dashboard_admin'); ?>/set_makananDB/"+id+"/available",
+              url: "<?= base_url('dashboard_admin'); ?>/set_makananDB/"+id+"/"+status,
               cache: false,
               // dataType : 'json',
               beforeSend: function(){
@@ -436,6 +438,7 @@
                 swal("Status berhasil dirubah!", {
                   icon: "success",
                 });
+                console.log("success");
                 location.reload();
               },
               error: function (xhr, ajaxOptions, thrownError) {

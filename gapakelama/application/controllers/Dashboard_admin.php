@@ -35,13 +35,14 @@ class Dashboard_Admin extends CI_Controller {
 
   function ubah_status(){
     $noMeja = $this->input->post('no_meja');
-    $status = $this->input->post('no_meja');
+    $status = $this->input->post('status');
 
     if($status== "1"){
-      $query = $this->db->query("UPDATE meja_digunakan SET digunakan='false' WHERE no_meja='$noMeja'");
+      $query = $this->db->query("UPDATE meja_digunakan SET digunakan='false', user_id='-', starttime='null' WHERE no_meja='$noMeja'");
     }
     elseif($status=="0"){
-      $query = $this->db->query("UPDATE meja_digunakan SET digunakan='true' WHERE no_meja='$noMeja'");
+      $time = date("Y-m-d H:i:s");
+      $query = $this->db->query("UPDATE meja_digunakan SET digunakan='true', user_id='', starttime='$time' WHERE no_meja='$noMeja'");
     }
   }
 
@@ -125,17 +126,19 @@ class Dashboard_Admin extends CI_Controller {
   }
 
   function set_makananDB($id=null,$status=null){
+    // log_r($_POST);
     // $id = $this->input->post("id_up");
-    if($status == "available"){
-      $set = 1;
-    } else {
-      $set = 0;
-    }
+
     if($id != null){
+      if($status == "available"){
+        $set = 0;
+      } else {
+        $set = 1;
+      }
       $query = $this->db->query("UPDATE list_makanan SET status='$set' WHERE id_makanan='$id'");
     }
 
-    // log_r($_POST);
+    log_r($this->db->last_query());
   }
 
   function add_minumanDB(){
