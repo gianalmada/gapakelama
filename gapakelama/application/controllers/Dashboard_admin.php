@@ -43,6 +43,8 @@ class Dashboard_Admin extends CI_Controller {
 
   public function daftar_minuman()
   {
+    $data['listMinuman'] = $this->db->query("SELECT * FROM list_minuman WHERE status='1'");
+    $data['alistMinuman'] = $this->db->query("SELECT * FROM list_minuman WHERE status='0'");
     $this->load->view('admin/daftar_minuman');
   }
 
@@ -99,12 +101,98 @@ class Dashboard_Admin extends CI_Controller {
     }
   }
 
-    function delete_makananDB($id=null){
-      // $id = $this->input->post("id_up");
+  function delete_makananDB($id=null){
+    // $id = $this->input->post("id_up");
 
-      if($id != null){
-        $query = $this->db->query("DELETE FROM list_makanan WHERE id_makanan='$id'");
-      }
+    if($id != null){
+      $query = $this->db->query("DELETE FROM list_makanan WHERE id_makanan='$id'");
+    }
+
+    // log_r($_POST);
+  }
+
+  function set_makananDB($id=null,$status=null){
+    // $id = $this->input->post("id_up");
+    if($status == "available"){
+      $set = 1;
+    } else {
+      $set = 0;
+    }
+    if($id != null){
+      $query = $this->db->query("UPDATE list_makanan SET status='$set' WHERE id_makanan='$id'");
+    }
+
+    // log_r($_POST);
+  }
+
+  function add_minumanDB(){
+    $id = $this->input->post("id_minuman");
+    $name = $this->input->post("nama_minuman");
+    $harga = $this->input->post("harga_minuman");
+    $img = $_FILES['image_minuman'];
+    $img_name = $img['name'];
+    // log_r($img_name);
+
+    $this->load->library('upload');
+    $config['upload_path'] = './assets/images/minuman/';
+    $config['allowed_types'] = 'gif|jpg|png|jpeg|bmp';
+    $config['max_size'] = '2048';
+    $config['max_width']  = '1288';
+    $config['max_height']  = '768';
+
+    $this->upload->initialize($config);
+
+    if($id != null && $this->upload->do_upload("image_minuman")){
+      $query = $this->db->query("INSERT INTO list_minuman (id_minuman,nama_minuman,harga_minuman,image_name) VALUES('$id','$name','$harga','$img_name')");
+    }
+
+    if($query){
+      $this->session->set_flashdata('result', 'Data berhasil di tambahkan!');
+      redirect('dashboard_admin/daftar_minuman');
+    } else {
+      $this->session->set_flashdata('result', 'Data gagal di tambahkan!');
+      redirect('dashboard_admin/daftar_minuman');
+    }
+  }
+
+  function update_minumanDB(){
+    $id = $this->input->post("id_up");
+    $name = $this->input->post("name_up");
+    $harga = $this->input->post("harga_up");
+
+    if($id != null){
+      $query = $this->db->query("UPDATE list_minuman SET nama_minuman = '$name',harga_minuman = '$harga' WHERE id_minuman='$id'");
+    }
+
+    if($query){
+      $this->session->set_flashdata('result', 'Data berhasil di ubah!');
+      redirect('dashboard_admin/daftar_minuman');
+    } else {
+      $this->session->set_flashdata('result', 'Data gagal di ubah!');
+      redirect('dashboard_admin/daftar_minuman');
+    }
+  }
+
+  function delete_minumanDB($id=null){
+    // $id = $this->input->post("id_up");
+
+    if($id != null){
+      $query = $this->db->query("DELETE FROM list_minuman WHERE id_minuman='$id'");
+    }
+
+    // log_r($_POST);
+  }
+
+  function set_minumanDB($id=null,$status=null){
+    // $id = $this->input->post("id_up");
+    if($status == "available"){
+      $set = 1;
+    } else {
+      $set = 0;
+    }
+    if($id != null){
+      $query = $this->db->query("UPDATE list_minuman SET status='$set' WHERE id_minuman='$id'");
+    }
 
     // log_r($_POST);
   }

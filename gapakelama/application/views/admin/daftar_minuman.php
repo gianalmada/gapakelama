@@ -15,8 +15,8 @@
 
   <!-- Load Data-->
   <?php
-  $jumlahMakanan = $listMakanan->num_rows();
-  $ajumlahMakanan = $alistMakanan->num_rows();?>
+  $jumlahMinuman = $listMinuman->num_rows();
+  $ajumlahMinuman = $alistMinuman->num_rows();?>
 
   <?php include 'template/nav_header.php'; ?>
 
@@ -34,16 +34,16 @@
       <?php endif;?>
       <ol class="breadcrumb">
         <li class="breadcrumb-item">MENU</li>
-        <li class="breadcrumb-item active">Daftar Makanan</li>
+        <li class="breadcrumb-item active">Daftar Minuman</li>
       </ol>
       <!-- CONTENT AREA -->
       <div class="row">
         <div class="col-12">
-          <h2>Daftar Menu Makanan</h2>
+          <h2>Daftar Menu Minuman</h2>
           <div class="py-2">
             <?php
             echo validation_errors("<div class='alert alert-danger'>","</div>"); ?>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addMakanan"><i class="fa fa-plus-square" style="color:white"></i> Menu Makanan</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addMinuman"><i class="fa fa-plus-square" style="color:white"></i> Menu Minuman</button>
           </div>
           <!-- Example DataTables Card-->
           <div class="card mb-3">
@@ -57,8 +57,8 @@
                   <thead>
                     <tr>
                       <th>No.</th>
-                      <th>Id Makanan</th>
-                      <th>Nama Makanan</th>
+                      <th>Id Minuman</th>
+                      <th>Nama Minuman</th>
                       <th>Harga</th>
                       <!-- <th>Image</th> -->
                       <th>Action</th>
@@ -66,21 +66,21 @@
                   </thead>
                   <tbody>
                     <?php
-                    if($jumlahMakanan > 0){
+                    if($jumlahMinuman > 0){
                       $i = 1;
                       // header('Content-type: image/jpeg');
-                      foreach ($listMakanan->result() as $key => $row){
+                      foreach ($listMinuman->result() as $key => $row){
                         ?>
                         <tr>
                           <td><?= $i++ ?></td>
-                          <td><?= $row->id_makanan ?></td>
-                          <td><?= $row->nama_makanan ?></td>
-                          <td>Rp.<?= number_format($row->harga_makanan,2,'.',',') ?></td>
+                          <td><?= $row->id_minuman ?></td>
+                          <td><?= $row->nama_minuman ?></td>
+                          <td>Rp.<?= number_format($row->harga_minuman,2,'.',',') ?></td>
                           <td>
                             <button id="viewImage" type="button" class="btn btn-info viewImage" data-toggle="modal" data-target="#viewImages" textcolor="#ffffff" data-filename="<?= $row->image_name ?>"><i class="fa fa-image"></i></button>
-                            <button id="editdata" type="button" class="edit-data btn btn-warning editdata" data-toggle="modal" data-id="<?= $row->id_makanan ?>" data-nama="<?= $row->nama_makanan ?>" data-harga="<?= $row->harga_makanan ?>" data-target="#editMakanan" textcolor="#ffffff"><i class="fa fa-edit"></i></button>
-                            <button id="delete" type="button" class="btn btn-danger delete" data-id="<?= $row->id_makanan ?>"><i class="fa fa-trash-o"></i></button></a>
-                            <button id="status" type="button" class="btn btn-light status" data-id="<?= $row->id_makanan ?>" title="Habis"><i class="fa fa-thumbs-o-down" style="color:black"></i></button></a>
+                            <button id="editdata" type="button" class="edit-data btn btn-warning editdata" data-toggle="modal" data-id="<?= $row->id_minuman ?>" data-nama="<?= $row->nama_minuman ?>" data-harga="<?= $row->harga_minuman ?>" data-target="#editMinuman" textcolor="#ffffff"><i class="fa fa-edit"></i></button>
+                            <button id="delete" type="button" class="btn btn-danger delete" data-id="<?= $row->id_minuman ?>"><i class="fa fa-trash-o"></i></button></a>
+                            <button id="status" type="button" class="btn btn-light status" data-id="<?= $row->id_minuman ?>" title="Habis"><i class="fa fa-thumbs-o-down" style="color:black"></i></button></a>
 
                           </td>
                         </tr>
@@ -106,8 +106,8 @@
                     <thead>
                       <tr>
                         <th>No.</th>
-                        <th>Id Makanan</th>
-                        <th>Nama Makanan</th>
+                        <th>Id Minuman</th>
+                        <th>Nama Minuman</th>
                         <th>Harga</th>
                         <!-- <th>Image</th> -->
                         <th>Action</th>
@@ -115,21 +115,21 @@
                     </thead>
                     <tbody>
                       <?php
-                      if($ajumlahMakanan > 0){
+                      if($ajumlahMinuman > 0){
                         $i = 1;
                         // header('Content-type: image/jpeg');
-                        foreach ($alistMakanan->result() as $key => $row){
+                        foreach ($alistMinuman->result() as $key => $row){
                           ?>
                           <tr>
                             <td><?= $i++ ?></td>
-                            <td><?= $row->id_makanan ?></td>
-                            <td><?= $row->nama_makanan ?></td>
-                            <td>Rp.<?= number_format($row->harga_makanan,2,'.',',') ?></td>
+                            <td><?= $row->id_minuman ?></td>
+                            <td><?= $row->nama_minuman ?></td>
+                            <td>Rp.<?= number_format($row->harga_minuman,2,'.',',') ?></td>
                             <td>
-                              <button id="viewImage2" type="button" class="btn btn-info viewImage2" data-toggle="modal" data-target="#viewImages" textcolor="#ffffff" data-id="<?= $row->id_makanan ?>"><i class="fa fa-image"></i></button>
-                              <button id="editdata2" type="button" class="edit-data btn btn-warning editdata2" data-toggle="modal" data-id="<?= $row->id_makanan ?>" data-nama="<?= $row->nama_makanan ?>" data-harga="<?= $row->harga_makanan ?>" data-target="#editMakanan" textcolor="#ffffff"><i class="fa fa-edit"></i></button>
-                              <button id="delete2" type="button" class="btn btn-danger delete2" data-id="<?= $row->id_makanan ?>"><i class="fa fa-trash-o"></i></button></a>
-                              <button id="status2" type="button" class="btn btn-light status2" data-id="<?= $row->id_makanan ?>" title="Tersedia"><i class="fa fa-thumbs-o-up" style="color:black"></i></button></a>
+                              <button id="viewImage2" type="button" class="btn btn-info viewImage2" data-toggle="modal" data-target="#viewImages" textcolor="#ffffff" data-id="<?= $row->id_minuman ?>"><i class="fa fa-image"></i></button>
+                              <button id="editdata2" type="button" class="edit-data btn btn-warning editdata2" data-toggle="modal" data-id="<?= $row->id_minuman ?>" data-nama="<?= $row->nama_minuman ?>" data-harga="<?= $row->harga_minuman ?>" data-target="#editMinuman" textcolor="#ffffff"><i class="fa fa-edit"></i></button>
+                              <button id="delete2" type="button" class="btn btn-danger delete2" data-id="<?= $row->id_minuman ?>"><i class="fa fa-trash-o"></i></button></a>
+                              <button id="status2" type="button" class="btn btn-light status2" data-id="<?= $row->id_minuman ?>" title="Tersedia"><i class="fa fa-thumbs-o-up" style="color:black"></i></button></a>
                             </td>
                           </tr>
                           <?php
@@ -162,33 +162,33 @@
         </div>
       </div>
     </div>
-      <div class="modal fade" id="addMakanan" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal fade" id="addMinuman" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Tambah Menu Makanan</h5>
+              <h5 class="modal-title" id="exampleModalLabel">Tambah Menu Minuman</h5>
               <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">×</span>
               </button>
             </div>
             <div class="modal-body">
-              <form action="<?php echo site_url('dashboard_admin/add_makananDB')?>" enctype="multipart/form-data" method="POST">
+              <form action="<?php echo site_url('dashboard_admin/add_minumanDB')?>" enctype="multipart/form-data" method="POST">
                 <?php $value="011".date("dyis")?>
                 <div class="form-group">
-                  <label for="formGroupExampleInput">Id Makanan</label>
-                  <input type="text" class="form-control" name="id_makanan" id="id_makanan" value="<?php echo $value?>" readonly>
+                  <label for="formGroupExampleInput">Id Minuman</label>
+                  <input type="text" class="form-control" name="id_minuman" id="id_minuman" value="<?php echo $value?>" readonly>
                 </div>
                 <div class="form-group">
-                  <label for="formGroupExampleInput2">Nama Makanan</label>
-                  <input type="text" class="form-control" name="nama_makanan" id="nama_makanan" placeholder="Nama Makanan">
+                  <label for="formGroupExampleInput2">Nama Minuman</label>
+                  <input type="text" class="form-control" name="nama_minuman" id="nama_minuman" placeholder="Nama Minuman">
                 </div>
                 <div class="form-group">
-                  <label for="formGroupExampleInput2">Harga Makanan</label>
-                  <input type="text" class="form-control" name="harga_makanan" id="harga_makanan" placeholder="Harga Makanan" onkeypress="return isNumber(event)" >
+                  <label for="formGroupExampleInput2">Harga Minuman</label>
+                  <input type="text" class="form-control" name="harga_minuman" id="harga_minuman" placeholder="Harga Minuman" onkeypress="return isNumber(event)" >
                 </div>
                 <div class="form-group">
-                  <label for="formGroupExampleInput2">Image Makanan</label>
-                  <input type="file" class="form-control" name="image_makanan" id="image" >
+                  <label for="formGroupExampleInput2">Image Minuman</label>
+                  <input type="file" class="form-control" name="image_minuman" id="image" >
                 </div>
               </div>
               <div class="modal-footer">
@@ -199,32 +199,32 @@
             </div>
           </div>
         </div>
-        <div class="modal fade" id="editMakanan" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal fade" id="editMinuman" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
           <div class="modal-dialog" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Ubah Menu Makanan</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Ubah Menu Minuman</h5>
                 <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">×</span>
                 </button>
               </div>
               <div class="modal-body">
-                <form action="<?php echo site_url('dashboard_admin/update_makananDB')?>" enctype="multipart/form-data" method="POST">
+                <form action="<?php echo site_url('dashboard_admin/update_minumanDB')?>" enctype="multipart/form-data" method="POST">
                   <div class="form-group">
-                    <label for="formGroupExampleInput">Id Makanan</label>
-                    <input type="text" class="form-control" id="up_id_makanan" name="id_up" value="" readonly>
+                    <label for="formGroupExampleInput">Id Minuman</label>
+                    <input type="text" class="form-control" id="up_id_minuman" name="id_up" value="" readonly>
                   </div>
                   <div class="form-group">
-                    <label for="formGroupExampleInput2">Nama Makanan</label>
-                    <input type="text" class="form-control" id="up_nama_makanan" name="name_up" placeholder="Nama Makanan">
+                    <label for="formGroupExampleInput2">Nama Minuman</label>
+                    <input type="text" class="form-control" id="up_nama_minuman" name="name_up" placeholder="Nama Minuman">
                   </div>
                   <div class="form-group">
-                    <label for="formGroupExampleInput2">Harga Makanan</label>
-                    <input type="text" class="form-control" id="up_harga_makanan" name="harga_up" placeholder="Harga Makanan" onkeypress="return isNumber(event)" >
+                    <label for="formGroupExampleInput2">Harga Minuman</label>
+                    <input type="text" class="form-control" id="up_harga_minuman" name="harga_up" placeholder="Harga Minuman" onkeypress="return isNumber(event)" >
                   </div>
                   <!-- <div class="form-group">
                   <img>
-                  <label for="formGroupExampleInput2">Image Makanan</label>
+                  <label for="formGroupExampleInput2">Image Minuman</label>
                   <input type="file" class="form-control" id="image" >
                 </div> -->
 
@@ -253,9 +253,9 @@
         var nama = this.dataset.nama;
         var harga = this.dataset.harga;
         // console.log(id);
-        $("#up_id_makanan").val(id);
-        $("#up_nama_makanan").val(nama);
-        $("#up_harga_makanan").val(harga);
+        $("#up_id_minuman").val(id);
+        $("#up_nama_minuman").val(nama);
+        $("#up_harga_minuman").val(harga);
 
       })
       $(".editdata2").click(function() {
@@ -263,9 +263,9 @@
         var nama = this.dataset.nama;
         var harga = this.dataset.harga;
         // console.log(id);
-        $("#up_id_makanan").val(id);
-        $("#up_nama_makanan").val(nama);
-        $("#up_harga_makanan").val(harga);
+        $("#up_id_minuman").val(id);
+        $("#up_nama_minuman").val(nama);
+        $("#up_harga_minuman").val(harga);
 
       })
 
@@ -283,7 +283,7 @@
           if (willDelete) {
             $.ajax({
               type: "POST",
-              url: "<?= base_url('dashboard_admin'); ?>/delete_makananDB/"+id,
+              url: "<?= base_url('dashboard_admin'); ?>/delete_minumanDB/"+id,
               cache: false,
               // dataType : 'json',
               beforeSend: function(){
@@ -328,7 +328,7 @@
           if (willDelete) {
             $.ajax({
               type: "POST",
-              url: "<?= base_url('dashboard_admin'); ?>/delete_makananDB/"+id,
+              url: "<?= base_url('dashboard_admin'); ?>/delete_minumanDB/"+id,
               cache: false,
               // dataType : 'json',
               beforeSend: function(){
@@ -366,7 +366,7 @@
 
         swal({
           title: "Apakah anda yakin ?",
-          text: "Ubah status makanan menjadi Available !",
+          text: "Ubah status minuman menjadi Available !",
           icon: "warning",
           buttons: true,
           dangerMode: true,
@@ -375,7 +375,7 @@
           if (willDelete) {
             $.ajax({
               type: "POST",
-              url: "<?= base_url('dashboard_admin'); ?>/set_makananDB/"+id+"/out",
+              url: "<?= base_url('dashboard_admin'); ?>/set_minumanDB/"+id+"/out",
               cache: false,
               // dataType : 'json',
               beforeSend: function(){
@@ -412,7 +412,7 @@
         var id = this.dataset.id;
         swal({
           title: "Apakah anda yakin ?",
-          text: "Ubah status makanan menjadi Out of Stock !",
+          text: "Ubah status minuman menjadi Out of Stock !",
           icon: "warning",
           buttons: true,
           dangerMode: true,
@@ -420,7 +420,7 @@
           if (willDelete) {
             $.ajax({
               type: "POST",
-              url: "<?= base_url('dashboard_admin'); ?>/set_makananDB/"+id+"/available",
+              url: "<?= base_url('dashboard_admin'); ?>/set_minumanDB/"+id+"/available",
               cache: false,
               // dataType : 'json',
               beforeSend: function(){
@@ -456,6 +456,6 @@
       $(".viewImage").click(function(){
         var name = this.dataset.filename;
 // console.log(name);
-        $("#my_image").attr('src','<?= base_url('assets'); ?>/images/makanan/'+name);
+        $("#my_image").attr('src','<?= base_url('assets'); ?>/images/minuman/'+name);
       })
       </script>
