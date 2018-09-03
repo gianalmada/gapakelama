@@ -29,7 +29,20 @@ class Dashboard_Admin extends CI_Controller {
 
   public function index_admin()
   {
-    $this->load->view('admin/index_admin');
+    $data['listMeja'] = $this->db->query("SELECT * FROM meja_digunakan");
+    $this->load->view('admin/index_admin',$data);
+  }
+
+  function ubah_status(){
+    $noMeja = $this->input->post('no_meja');
+    $status = $this->input->post('no_meja');
+
+    if($status== "1"){
+      $query = $this->db->query("UPDATE meja_digunakan SET digunakan='false' WHERE no_meja='$noMeja'");
+    }
+    elseif($status=="0"){
+      $query = $this->db->query("UPDATE meja_digunakan SET digunakan='true' WHERE no_meja='$noMeja'");
+    }
   }
 
   function daftar_makanan()
@@ -45,7 +58,7 @@ class Dashboard_Admin extends CI_Controller {
   {
     $data['listMinuman'] = $this->db->query("SELECT * FROM list_minuman WHERE status='1'");
     $data['alistMinuman'] = $this->db->query("SELECT * FROM list_minuman WHERE status='0'");
-    $this->load->view('admin/daftar_minuman');
+    $this->load->view('admin/daftar_minuman',$data);
   }
 
   public function tambah_meja()

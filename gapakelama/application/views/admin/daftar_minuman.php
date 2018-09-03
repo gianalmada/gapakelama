@@ -157,7 +157,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <img id="my_image" src="" width="400px">
+            <img id="my_image" src="" width="400px" align="center">
           </div>
         </div>
       </div>
